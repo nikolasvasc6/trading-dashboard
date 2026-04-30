@@ -574,15 +574,44 @@ function saveInitialBalance(val) {
   renderKPIs();
 }
 
+function getPeriodStartDate() {
+  // Returns the ISO date string (YYYY-MM-DD) of the first day of the active period,
+  // or null when activeMonth === 'todos' (no period boundary).
+  if (activeMonth === 'todos') return null;
+  const today = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const iso  = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  if (activeMonth === 'dia')    return iso(today);
+  if (activeMonth === 'ontem')  { const d=new Date(today); d.setDate(d.getDate()-1); return iso(d); }
+  if (activeMonth === 'semana') { const d=new Date(today); const dow=d.getDay()===0?6:d.getDay()-1; d.setDate(d.getDate()-dow); return iso(d); }
+  if (activeMonth === 'ano')    return today.getFullYear()+'-01-01';
+  // YYYY-MM chip
+  if (/^\d{4}-\d{2}$/.test(activeMonth)) return activeMonth+'-01';
+  return null;
+}
+
 function renderKPIs() {
   const k = calcKPIs(getFiltered()); const v = k.accumulated;
 
   // ── Balance banner ──────────────────────────────────────────
-  const hasBalance = initialBalance > 0;
-  const current    = initialBalance + v;
-  const pctChange  = hasBalance ? ((v / initialBalance) * 100) : 0;
+  const hasBalance   = initialBalance > 0;
+  const periodStart  = getPeriodStartDate();
+  const isTodos      = activeMonth === 'todos';
 
-  document.getElementById('bb-initial').textContent  = hasBalance ? fmtAbs(initialBalance) : '$ —';
+  // For non-"todos" periods: saldo inicial = initialBalance + trades before period start
+  let balanceAtStart = initialBalance;
+  if (!isTodos && periodStart) {
+    const beforePeriod = trades.filter(t =>
+      t.date < periodStart &&
+      (activeMarket === 'todos' || t.market === activeMarket)
+    );
+    balanceAtStart = initialBalance + beforePeriod.reduce((s, t) => s + t.result, 0);
+  }
+
+  const current    = balanceAtStart + v;
+  const pctChange  = balanceAtStart !== 0 ? ((v / balanceAtStart) * 100) : 0;
+
+  document.getElementById('bb-initial').textContent  = hasBalance ? fmtAbs(balanceAtStart) : '$ —';
   document.getElementById('bb-result').textContent   = v !== 0 ? fmt(v) : '$ —';
   document.getElementById('bb-result').className     = 'bb-value ' + (v > 0 ? 'pos' : v < 0 ? 'neg' : '');
 
@@ -590,7 +619,7 @@ function renderKPIs() {
   const bbPct     = document.getElementById('bb-pct');
   if (hasBalance) {
     bbCurrent.childNodes[0].textContent = fmtAbs(current) + ' ';
-    bbCurrent.className = 'bb-value ' + (current >= initialBalance ? 'pos' : 'neg');
+    bbCurrent.className = 'bb-value ' + (current >= balanceAtStart ? 'pos' : 'neg');
     bbPct.textContent   = (pctChange >= 0 ? '+' : '') + pctChange.toFixed(2) + '%';
     bbPct.className     = 'balance-pct ' + (pctChange >= 0 ? 'pos' : 'neg');
     bbPct.style.display = 'inline-block';
