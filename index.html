@@ -303,6 +303,7 @@
     <div class="form-title">Registrar Operação</div>
     <div class="form-grid">
       <div class="form-group"><label>Data</label><input type="date" id="f-date"></div>
+      <div class="form-group"><label>Hora</label><input type="time" id="f-time"></div>
       <div class="form-group"><label>Mercado</label>
         <select id="f-market">
           <option value="Forex">Forex</option>
@@ -378,6 +379,7 @@
     <input type="hidden" id="e-id">
     <div class="form-grid">
       <div class="form-group"><label>Data</label><input type="date" id="e-date"></div>
+      <div class="form-group"><label>Hora</label><input type="time" id="e-time"></div>
       <div class="form-group"><label>Mercado</label>
         <select id="e-market">
           <option value="Forex">Forex</option>
@@ -726,7 +728,11 @@ function renderMonthChart() {
 
 /* ── tabela ───────────────────────────────────────────────── */
 function renderTable() {
-  const d = getFiltered().sort((a,b)=>b.date.localeCompare(a.date));
+  const d = getFiltered().sort((a,b) => {
+    const ka = (a.date||'') + 'T' + (a.time||'00:00');
+    const kb = (b.date||'') + 'T' + (b.time||'00:00');
+    return kb.localeCompare(ka);
+  });
   document.getElementById('table-count').textContent =
     d.length + (d.length!==trades.length ? ' de '+trades.length+' operações' : ' operações');
   if (!d.length) {
@@ -736,7 +742,7 @@ function renderTable() {
   const mC = {'Forex':'forex','Crypto':'crypto','B3 Futuros':'futuros','Ações B3':'acoes'};
   const rows = d.map(t => `
     <tr>
-      <td>${t.date.split('-').reverse().join('/')}</td>
+      <td>${t.date.split('-').reverse().join('/') + (t.time ? ' ' + t.time : '')}</td>
       <td><span class="badge badge-${mC[t.market]}">${t.market}</span></td>
       <td style="font-weight:500">${t.asset}</td>
       <td><span class="badge badge-${(t.dir||'').toLowerCase()}">${t.dir||'—'}</span></td>
@@ -775,6 +781,7 @@ function toggleForm() {
 
 async function addTrade() {
   const date     = document.getElementById('f-date').value;
+  const time     = document.getElementById('f-time').value || new Date().toTimeString().slice(0,5);
   const market   = document.getElementById('f-market').value;
   const asset    = document.getElementById('f-asset').value.trim();
   const dir      = document.getElementById('f-dir').value;
@@ -784,7 +791,7 @@ async function addTrade() {
   const notes    = document.getElementById('f-notes').value.trim();
   if (!date || !asset || isNaN(result)) { alert('Preencha Data, Ativo e Resultado.'); return; }
   try {
-    await window._fbPush({ date, market, asset, dir, result, strategy, tf, notes });
+    await window._fbPush({ date, time, market, asset, dir, result, strategy, tf, notes });
     document.getElementById('formPanel').classList.remove('open');
     showToast('Operação registrada!');
   } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
@@ -800,6 +807,7 @@ function openEdit(id) {
   document.getElementById('e-asset').value  = t.asset;
   document.getElementById('e-dir').value    = t.dir;
   document.getElementById('e-result').value = t.result;
+  document.getElementById('e-time').value   = t.time || '';
   document.getElementById('e-notes').value  = t.notes || '';
   msSet('e-strategy', Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []));
   msSet('e-tf',       Array.isArray(t.tf)       ? t.tf       : (t.tf       ? [t.tf]       : []));
@@ -817,12 +825,13 @@ async function saveTrade() {
   const asset    = document.getElementById('e-asset').value.trim();
   const dir      = document.getElementById('e-dir').value;
   const result   = parseFloat(document.getElementById('e-result').value);
+  const time     = document.getElementById('e-time').value || '';
   const strategy = msGet('e-strategy');
   const tf       = msGet('e-tf');
   const notes    = document.getElementById('e-notes').value.trim();
   if (!date || !asset || isNaN(result)) { alert('Preencha Data, Ativo e Resultado.'); return; }
   try {
-    await window._fbUpdate(id, { date, market, asset, dir, result, strategy, tf, notes });
+    await window._fbUpdate(id, { date, time, market, asset, dir, result, strategy, tf, notes });
     document.getElementById('editModal').style.display = 'none';
     showToast('Operação atualizada!');
   } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
