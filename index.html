@@ -318,7 +318,8 @@
           <option value="Ações B3">Ações B3</option>
         </select>
       </div>
-      <div class="form-group"><label>Ativo</label><input type="text" id="f-asset" placeholder="ex: EUR/USD"></div>
+      <div class="form-group"><label>Ativo</label><input type="text" id="f-asset" list="asset-list" placeholder="ex: EUR/USD" autocomplete="off"></div>
+<datalist id="asset-list"></datalist>
       <div class="form-group"><label>Direção</label>
         <select id="f-dir"><option value="Long">Long</option><option value="Short">Short</option></select>
       </div>
@@ -394,7 +395,7 @@
           <option value="Ações B3">Ações B3</option>
         </select>
       </div>
-      <div class="form-group"><label>Ativo</label><input type="text" id="e-asset"></div>
+      <div class="form-group"><label>Ativo</label><input type="text" id="e-asset" list="asset-list" autocomplete="off"></div>
       <div class="form-group"><label>Direção</label>
         <select id="e-dir"><option value="Long">Long</option><option value="Short">Short</option></select>
       </div>
@@ -503,6 +504,21 @@ let activeMarket  = 'todos';
 let activeMonth   = 'todos'; // 'todos' | 'dia' | 'semana' | 'ano' | 'YYYY-MM'
 let charts        = {};
 let initialBalance = 0;
+
+/* ── lista de ativos (datalist) ───────────────────────────── */
+function updateAssetList() {
+  const dl = document.getElementById('asset-list');
+  if (!dl) return;
+  // collect unique assets, uppercase, sorted by frequency desc then alpha
+  const freq = {};
+  trades.forEach(t => {
+    if (!t.asset) return;
+    const key = t.asset.trim().toUpperCase();
+    freq[key] = (freq[key] || 0) + 1;
+  });
+  const sorted = Object.keys(freq).sort((a,b) => freq[b]-freq[a] || a.localeCompare(b));
+  dl.innerHTML = sorted.map(a => `<option value="${a}">`).join('');
+}
 
 /* ── utilidades ───────────────────────────────────────────── */
 function setStatus(cls, text) {
@@ -768,7 +784,7 @@ function renderTable() {
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function renderAll() { renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderTable(); }
+function renderAll() { updateAssetList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderTable(); }
 
 /* ── form nova operação ───────────────────────────────────── */
 function toggleForm() {
