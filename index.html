@@ -3,24 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1a1a18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Trading Dashboard</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPCEtLSBCYWNrZ3JvdW5kIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjYiIGZpbGw9IiMxYTFhMTgiLz4KICA8IS0tIEJlYXJpc2ggY2FuZGxlIChyZWQpIC0gbGVmdCAtLT4KICA8bGluZSB4MT0iOSIgeTE9IjQiIHgyPSI5IiB5Mj0iOCIgc3Ryb2tlPSIjZjA5NTk1IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjYiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiNhMzJkMmQiLz4KICA8bGluZSB4MT0iOSIgeTE9IjE3IiB4Mj0iOSIgeTI9IjIxIiBzdHJva2U9IiNmMDk1OTUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSBjZW50ZXIgLS0+CiAgPGxpbmUgeDE9IjE2IiB5MT0iNSIgeDI9IjE2IiB5Mj0iMTAiIHN0cm9rZT0iIzk3YzQ1OSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxyZWN0IHg9IjEzIiB5PSIxMCIgd2lkdGg9IjYiIGhlaWdodD0iMTIiIHJ4PSIxIiBmaWxsPSIjM2I2ZDExIi8+CiAgPGxpbmUgeDE9IjE2IiB5MT0iMjIiIHgyPSIxNiIgeTI9IjI3IiBzdHJva2U9IiM5N2M0NTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSByaWdodCwgc21hbGxlciAtLT4KICA8bGluZSB4MT0iMjMiIHkxPSI4IiB4Mj0iMjMiIHkyPSIxMiIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iMjAiIHk9IjEyIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMSIgZmlsbD0iIzNiNmQxMSIvPgogIDxsaW5lIHgxPSIyMyIgeTE9IjIwIiB4Mj0iMjMiIHkyPSIyNCIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==">
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPCEtLSBCYWNrZ3JvdW5kIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjYiIGZpbGw9IiMxYTFhMTgiLz4KICA8IS0tIEJlYXJpc2ggY2FuZGxlIChyZWQpIC0gbGVmdCAtLT4KICA8bGluZSB4MT0iOSIgeTE9IjQiIHgyPSI5IiB5Mj0iOCIgc3Ryb2tlPSIjZjA5NTk1IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjYiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiNhMzJkMmQiLz4KICA8bGluZSB4MT0iOSIgeTE9IjE3IiB4Mj0iOSIgeTI9IjIxIiBzdHJva2U9IiNmMDk1OTUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSBjZW50ZXIgLS0+CiAgPGxpbmUgeDE9IjE2IiB5MT0iNSIgeDI9IjE2IiB5Mj0iMTAiIHN0cm9rZT0iIzk3YzQ1OSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxyZWN0IHg9IjEzIiB5PSIxMCIgd2lkdGg9IjYiIGhlaWdodD0iMTIiIHJ4PSIxIiBmaWxsPSIjM2I2ZDExIi8+CiAgPGxpbmUgeDE9IjE2IiB5MT0iMjIiIHgyPSIxNiIgeTI9IjI3IiBzdHJva2U9IiM5N2M0NTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSByaWdodCwgc21hbGxlciAtLT4KICA8bGluZSB4MT0iMjMiIHkxPSI4IiB4Mj0iMjMiIHkyPSIxMiIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iMjAiIHk9IjEyIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMSIgZmlsbD0iIzNiNmQxMSIvPgogIDxsaW5lIHgxPSIyMyIgeTE9IjIwIiB4Mj0iMjMiIHkyPSIyNCIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==">
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPCEtLSBCYWNrZ3JvdW5kIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjYiIGZpbGw9IiMxYTFhMTgiLz4KICA8IS0tIEJlYXJpc2ggY2FuZGxlIChyZWQpIC0gbGVmdCAtLT4KICA8bGluZSB4MT0iOSIgeTE9IjQiIHgyPSI5IiB5Mj0iOCIgc3Ryb2tlPSIjZjA5NTk1IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjYiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiNhMzJkMmQiLz4KICA8bGluZSB4MT0iOSIgeTE9IjE3IiB4Mj0iOSIgeTI9IjIxIiBzdHJva2U9IiNmMDk1OTUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSBjZW50ZXIgLS0+CiAgPGxpbmUgeDE9IjE2IiB5MT0iNSIgeDI9IjE2IiB5Mj0iMTAiIHN0cm9rZT0iIzk3YzQ1OSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxyZWN0IHg9IjEzIiB5PSIxMCIgd2lkdGg9IjYiIGhlaWdodD0iMTIiIHJ4PSIxIiBmaWxsPSIjM2I2ZDExIi8+CiAgPGxpbmUgeDE9IjE2IiB5MT0iMjIiIHgyPSIxNiIgeTI9IjI3IiBzdHJva2U9IiM5N2M0NTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSByaWdodCwgc21hbGxlciAtLT4KICA8bGluZSB4MT0iMjMiIHkxPSI4IiB4Mj0iMjMiIHkyPSIxMiIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iMjAiIHk9IjEyIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMSIgZmlsbD0iIzNiNmQxMSIvPgogIDxsaW5lIHgxPSIyMyIgeTE9IjIwIiB4Mj0iMjMiIHkyPSIyNCIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==">
 <style>
   :root {
-    --bg:#f8f7f4;--surface:#fff;--surface-2:#f1efe8;
-    --border:rgba(0,0,0,0.1);--border-strong:rgba(0,0,0,0.2);
-    --text:#2c2c2a;--muted:#888780;--faint:#b4b2a9;
-    --green:#3b6d11;--green-bg:#eaf3de;
-    --red:#a32d2d;--red-bg:#fcebeb;
-    --amber:#854f0b;--amber-bg:#faeeda;
-    --blue:#185fa5;--blue-bg:#e6f1fb;
-    --teal:#0f6e56;--teal-bg:#e1f5ee;
-    --purple:#534ab7;--purple-bg:#eeedfe;
-    --r:8px;--rl:12px;
-  }
-  @media(prefers-color-scheme:dark){:root{
+    /* forced dark mode — all devices */
+    color-scheme: dark;
     --bg:#1a1a18;--surface:#242422;--surface-2:#2c2c2a;
     --border:rgba(255,255,255,0.1);--border-strong:rgba(255,255,255,0.2);
     --text:#e8e8e0;--muted:#888780;--faint:#5f5e5a;
@@ -30,9 +24,18 @@
     --blue:#85b7eb;--blue-bg:#042c53;
     --teal:#5dcaa5;--teal-bg:#04342c;
     --purple:#afa9ec;--purple-bg:#26215c;
-  }}
+    --r:8px;--rl:12px;
+  }
+  /* Force native controls dark (Safari iOS / Chrome Android) */
+  input,select,textarea{color-scheme:dark;}
+  input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.8);}
+  input[type=time]::-webkit-calendar-picker-indicator{filter:invert(0.8);}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--surface-2);border-radius:3px;}
+
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a1a18;background:var(--bg);color:#e8e8e0;color:var(--text);font-size:14px;line-height:1.5;}
   .page{max-width:1140px;margin:0 auto;padding:24px 20px 56px;}
 
   /* HEADER */
