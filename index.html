@@ -134,6 +134,22 @@
   .balance-pct.pos{background:var(--green-bg);color:var(--green);}
   .balance-pct.neg{background:var(--red-bg);color:var(--red);}
 
+  /* OP FILTERS */
+  .op-filters{background:var(--surface);border:.5px solid var(--border);border-radius:var(--rl);padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+  .op-filter-group{display:flex;flex-direction:column;gap:5px;min-width:140px;}
+  .op-filter-group label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .op-filter-group select,.op-filter-group input{background:var(--surface-2);border:.5px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--r);font-size:13px;outline:none;width:100%;}
+  .op-filter-group select:focus,.op-filter-group input:focus{border-color:var(--text);}
+  .op-shortcuts{display:flex;gap:6px;flex-wrap:wrap;}
+  .op-shortcut{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:.5px solid var(--border);background:var(--surface-2);color:var(--muted);transition:all .15s;white-space:nowrap;}
+  .op-shortcut.active{background:var(--surface);color:var(--text);border-color:var(--text);}
+  .op-filter-actions{display:flex;align-items:flex-end;gap:8px;margin-left:auto;}
+  @media(max-width:640px){
+    .op-filters{flex-direction:column;gap:10px;}
+    .op-filter-group{min-width:0;width:100%;}
+    .op-filter-actions{margin-left:0;width:100%;justify-content:flex-end;}
+  }
+
   /* TAB NAVIGATION */
   .tab-nav{display:flex;gap:2px;margin-bottom:24px;background:var(--surface-2);border-radius:var(--rl);padding:4px;width:fit-content;}
   .tab-btn{padding:7px 20px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .18s;}
@@ -395,6 +411,46 @@
     </div>
   </div>
 
+  <!-- FILTROS DA ABA OPERAÇÕES -->
+  <div class="op-filters" id="op-filters">
+    <div class="op-filter-group">
+      <label>Estratégia</label>
+      <select id="op-strategy" onchange="applyOpFilters()">
+        <option value="">Todas</option>
+      </select>
+    </div>
+    <div class="op-filter-group">
+      <label>Mercado</label>
+      <select id="op-market" onchange="applyOpFilters()">
+        <option value="">Todos</option>
+        <option value="Forex">Forex</option>
+        <option value="Crypto">Crypto</option>
+        <option value="B3 Futuros">B3 Futuros</option>
+        <option value="Ações B3">Ações B3</option>
+      </select>
+    </div>
+    <div class="op-filter-group">
+      <label>Data inicial</label>
+      <input type="date" id="op-date-from" onchange="applyOpFilters()">
+    </div>
+    <div class="op-filter-group">
+      <label>Data final</label>
+      <input type="date" id="op-date-to" onchange="applyOpFilters()">
+    </div>
+    <div class="op-filter-group">
+      <label>Atalhos</label>
+      <div class="op-shortcuts">
+        <span class="op-shortcut" data-sc="hoje"   onclick="opShortcut('hoje')">Hoje</span>
+        <span class="op-shortcut" data-sc="ontem"  onclick="opShortcut('ontem')">Ontem</span>
+        <span class="op-shortcut" data-sc="semana" onclick="opShortcut('semana')">Semana</span>
+        <span class="op-shortcut" data-sc="mes"    onclick="opShortcut('mes')">Mês</span>
+      </div>
+    </div>
+    <div class="op-filter-actions">
+      <button class="btn btn-sm" onclick="clearOpFilters()">✕ Limpar</button>
+    </div>
+  </div>
+
   <!-- TABELA -->
   <div class="table-section">
     <div class="table-header">
@@ -533,6 +589,89 @@ let activeMarket  = 'todos';
 let activeMonth   = 'todos'; // 'todos' | 'dia' | 'semana' | 'ano' | 'YYYY-MM'
 let charts        = {};
 let initialBalance = 0;
+
+/* ── filtros da aba operações ─────────────────────────────── */
+const opFilters = { strategy:'', market:'', dateFrom:'', dateTo:'' };
+
+function updateOpStrategyList() {
+  const sel = document.getElementById('op-strategy');
+  if (!sel) return;
+  const current = sel.value;
+  const strats = new Set();
+  trades.forEach(t => {
+    const arr = Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []);
+    arr.forEach(s => s && strats.add(s));
+  });
+  const sorted = [...strats].sort();
+  sel.innerHTML = '<option value="">Todas</option>' +
+    sorted.map(s => `<option value="${s}" ${s===current?'selected':''}>${s}</option>`).join('');
+}
+
+function opShortcut(key) {
+  const today = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+
+  // toggle: click same shortcut again → clear
+  const active = document.querySelector('.op-shortcut.active');
+  if (active && active.dataset.sc === key) { clearOpFilters(); return; }
+
+  document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.op-shortcut[data-sc="${key}"]`).classList.add('active');
+
+  let from='', to=iso(today);
+  if (key==='hoje') { from=iso(today); }
+  else if (key==='ontem') {
+    const y=new Date(today); y.setDate(today.getDate()-1);
+    from=iso(y); to=iso(y);
+  } else if (key==='semana') {
+    const dow=today.getDay()===0?6:today.getDay()-1;
+    const mon=new Date(today); mon.setDate(today.getDate()-dow);
+    from=iso(mon);
+  } else if (key==='mes') {
+    from=today.getFullYear()+'-'+pad(today.getMonth()+1)+'-01';
+  }
+
+  document.getElementById('op-date-from').value = from;
+  document.getElementById('op-date-to').value   = to;
+  opFilters.dateFrom = from;
+  opFilters.dateTo   = to;
+  applyOpFilters(false); // false = don't reset shortcut highlight
+}
+
+function applyOpFilters(resetShortcut=true) {
+  if (resetShortcut) {
+    document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
+  }
+  opFilters.strategy = document.getElementById('op-strategy')?.value || '';
+  opFilters.market   = document.getElementById('op-market')?.value   || '';
+  opFilters.dateFrom = document.getElementById('op-date-from')?.value || '';
+  opFilters.dateTo   = document.getElementById('op-date-to')?.value   || '';
+  renderTable();
+}
+
+function clearOpFilters() {
+  opFilters.strategy=''; opFilters.market=''; opFilters.dateFrom=''; opFilters.dateTo='';
+  document.getElementById('op-strategy').value  = '';
+  document.getElementById('op-market').value    = '';
+  document.getElementById('op-date-from').value = '';
+  document.getElementById('op-date-to').value   = '';
+  document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
+  renderTable();
+}
+
+function getOpFiltered() {
+  return trades.filter(t => {
+    if (opFilters.market   && t.market !== opFilters.market) return false;
+    if (opFilters.strategy) {
+      const arr = Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[]);
+      if (!arr.includes(opFilters.strategy)) return false;
+    }
+    if (opFilters.dateFrom && t.date < opFilters.dateFrom) return false;
+    if (opFilters.dateTo   && t.date > opFilters.dateTo)   return false;
+    return true;
+  });
+}
 
 /* ── navegação por abas ───────────────────────────────────── */
 function switchTab(name) {
@@ -803,13 +942,13 @@ function renderMonthChart() {
 
 /* ── tabela ───────────────────────────────────────────────── */
 function renderTable() {
-  const d = getFiltered().sort((a,b) => {
+  const d = getOpFiltered().sort((a,b) => {
     const ka = (a.date||'') + 'T' + (a.time||'00:00');
     const kb = (b.date||'') + 'T' + (b.time||'00:00');
     return kb.localeCompare(ka);
   });
   document.getElementById('table-count').textContent =
-    d.length + (d.length!==trades.length ? ' de '+trades.length+' operações' : ' operações');
+    d.length + ' operação' + (d.length!==1?'s':'') + (d.length!==trades.length ? ' (de '+trades.length+' total)' : '');
   if (!d.length) {
     document.getElementById('tableBody').innerHTML = '<div class="empty-state">Nenhuma operação para este filtro.</div>';
     return;
@@ -837,7 +976,7 @@ function renderTable() {
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function renderAll() { updateAssetList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderTable(); }
+function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderTable(); }
 
 /* ── form nova operação ───────────────────────────────────── */
 function toggleForm() {
