@@ -85,30 +85,33 @@
   /* FORM */
   /* dialog nova operação */
   /* dialog nova operação — centralizado cross-browser */
-  dialog#newTradeDialog{
-    position:fixed;inset:0;margin:auto; /* força centro em Safari/iOS */
+  /* ── Modal Nova Operação (div-based, z-index normal) ── */
+  .ntd-overlay{
+    display:none;position:fixed;inset:0;z-index:800;
+    background:rgba(0,0,0,.62);
+    align-items:center;justify-content:center;
+  }
+  .ntd-overlay.open{display:flex;}
+  .ntd-modal{
+    position:relative;z-index:810;
     background:var(--surface);color:var(--text);
     border:.5px solid var(--border);border-radius:var(--rl);
     padding:0;width:min(700px,95vw);
     max-height:min(90vh,800px);overflow-y:auto;
     box-shadow:0 24px 60px rgba(0,0,0,.65);
-    top:50%;left:50%;transform:translate(-50%,-50%); /* fallback extra */
-  }
-  dialog#newTradeDialog::backdrop{
-    background:rgba(0,0,0,.6);backdrop-filter:blur(3px);
-  }
-  dialog#newTradeDialog[open]{
     animation:dlgIn .2s cubic-bezier(.34,1.56,.64,1);
   }
   @keyframes dlgIn{
-    from{opacity:0;transform:translate(-50%,-50%) scale(.95)}
-    to  {opacity:1;transform:translate(-50%,-50%) scale(1)}
+    from{opacity:0;transform:scale(.95)}
+    to  {opacity:1;transform:scale(1)}
   }
   .dlg-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;}
   .dlg-header h2{font-size:16px;font-weight:500;letter-spacing:-.2px;}
   .dlg-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:4px 8px;border-radius:var(--r);transition:all .15s;}
   .dlg-close:hover{color:var(--text);background:var(--surface-2);}
   .dlg-body{padding:20px 24px 24px;}
+  /* dropdowns live in normal stacking context — z-index works */
+  .ms-dropdown{z-index:9999;}
   .form-title{font-size:15px;font-weight:500;margin-bottom:20px;}
   .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;}
   .form-group{display:flex;flex-direction:column;gap:5px;}
@@ -140,7 +143,7 @@
   .empty-state{padding:40px;text-align:center;color:var(--muted);font-size:13px;}
 
   /* EDIT MODAL */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;}
   .modal{background:var(--surface);border-radius:var(--rl);padding:28px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto;}
   .modal-title{font-size:15px;font-weight:500;margin-bottom:20px;}
   .modal-actions{display:flex;gap:8px;margin-top:20px;}
@@ -207,7 +210,7 @@
   .ms-trigger.open{border-color:var(--text);}
   .ms-tag{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:500;white-space:nowrap;border:.5px solid transparent;}
   .ms-placeholder{font-size:13px;color:var(--muted);}
-  .ms-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:.5px solid var(--border-strong);border-radius:var(--r);z-index:150;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:240px;overflow-y:auto;display:none;padding:4px 0;}
+  .ms-dropdown{position:fixed;background:var(--surface);border:.5px solid var(--border-strong);border-radius:var(--r);z-index:2147483647;box-shadow:0 8px 24px rgba(0,0,0,.38);max-height:220px;overflow-y:auto;display:none;padding:4px 0;min-width:180px;}
   .ms-dropdown.open{display:block;}
   .ms-item{display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;font-size:13px;transition:background .1s;}
   .ms-item:hover{background:var(--surface-2);}
@@ -242,15 +245,12 @@
     .charts-top .card:first-child .chart-wrap{height:180px !important;}
     .charts-top .card:last-child .chart-wrap{height:150px !important;}
     .charts-bottom .chart-wrap{height:160px !important;}
-    dialog#newTradeDialog{
+    .ntd-overlay{align-items:flex-end;}
+    .ntd-modal{
       width:100vw;max-height:85vh;
       border-radius:var(--rl) var(--rl) 0 0;
-      top:auto;bottom:0;left:0;
-      transform:none;
-      inset:auto 0 0 0;
-      margin:0;
+      animation:dlgSlideUp .22s ease;
     }
-    dialog#newTradeDialog[open]{animation:dlgSlideUp .22s ease;}
     @keyframes dlgSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
     .form-grid{grid-template-columns:1fr;}
     .form-group input,.form-group select{font-size:16px;padding:10px;}
@@ -1040,7 +1040,7 @@ function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); 
 /* ── form nova operação ───────────────────────────────────── */
 function toggleForm() {
   const dlg = document.getElementById('newTradeDialog');
-  if (dlg.open) { closeNewTradeDialog(); return; }
+  if (dlg.classList.contains('open')) { closeNewTradeDialog(); return; }
   // reset fields
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
@@ -1054,22 +1054,33 @@ function toggleForm() {
   document.getElementById('f-notes').value = '';
   msReset('f-strategy');
   msReset('f-tf');
-  dlg.showModal();
+  dlg.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
+
 function closeNewTradeDialog() {
-  document.getElementById('newTradeDialog').close();
+  document.getElementById('newTradeDialog').classList.remove('open');
+  document.body.style.overflow = '';
+  // restore any portaled dropdowns
+  document.querySelectorAll('.ms-dropdown.open').forEach(d => {
+    d.classList.remove('open');
+    _portalClose(d);
+  });
+  document.querySelectorAll('.ms-trigger.open').forEach(t => t.classList.remove('open'));
 }
 
 // Close on backdrop click
 document.addEventListener('DOMContentLoaded', () => {
   const dlg = document.getElementById('newTradeDialog');
   if (dlg) {
+    // Click on overlay (backdrop) closes modal; clicks on modal box don't
     dlg.addEventListener('click', e => {
-      const rect = dlg.getBoundingClientRect();
-      const outside = e.clientX < rect.left || e.clientX > rect.right ||
-                      e.clientY < rect.top  || e.clientY > rect.bottom;
-      if (outside) closeNewTradeDialog();
+      if (e.target === dlg) closeNewTradeDialog();
+    });
+    // ESC key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && dlg.classList.contains('open')) closeNewTradeDialog();
     });
   }
 });
@@ -1169,20 +1180,87 @@ function colorCtag(value) {
   return `<span class="ctag" style="background:${c.bg};color:${c.text};border:.5px solid ${c.border}">${value}</span>`;
 }
 
+/* Portal map: tracks original parent of each dropdown for restore */
+const _msPortalMap = new Map();
+
+function positionDropdown(trigger, dropdown) {
+  const rect = trigger.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  const ddH = Math.min(220, dropdown.scrollHeight + 8);
+
+  dropdown.style.width = rect.width + 'px';
+  dropdown.style.left  = rect.left  + 'px';
+
+  if (spaceBelow >= ddH || spaceBelow >= spaceAbove) {
+    dropdown.style.top    = (rect.bottom + 4) + 'px';
+    dropdown.style.bottom = 'auto';
+  } else {
+    dropdown.style.top    = 'auto';
+    dropdown.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+  }
+}
+
+function _portalOpen(dropdown) {
+  // If inside a <dialog>, move dropdown to <body> so it escapes top-layer clipping
+  const dlg = dropdown.closest('dialog');
+  if (dlg && !_msPortalMap.has(dropdown)) {
+    const placeholder = document.createComment('ms-portal:' + dropdown.id);
+    dropdown.parentNode.insertBefore(placeholder, dropdown);
+    _msPortalMap.set(dropdown, { placeholder, parent: dropdown.parentNode });
+    document.body.appendChild(dropdown);
+  }
+}
+
+function _portalClose(dropdown) {
+  if (_msPortalMap.has(dropdown)) {
+    const { placeholder, parent } = _msPortalMap.get(dropdown);
+    placeholder.parentNode.insertBefore(dropdown, placeholder);
+    placeholder.remove();
+    _msPortalMap.delete(dropdown);
+  }
+}
+
 function toggleMs(id) {
   const trigger  = document.getElementById(id + '-trigger');
   const dropdown = document.getElementById(id + '-dropdown');
   const isOpen   = dropdown.classList.contains('open');
-  document.querySelectorAll('.ms-dropdown.open').forEach(d => d.classList.remove('open'));
+
+  // Close all open dropdowns and restore portals
+  document.querySelectorAll('.ms-dropdown.open').forEach(d => {
+    d.classList.remove('open');
+    _portalClose(d);
+  });
   document.querySelectorAll('.ms-trigger.open').forEach(t => t.classList.remove('open'));
+
   if (!isOpen) {
+    _portalOpen(dropdown);          // move to body if inside dialog
     dropdown.classList.add('open');
     trigger.classList.add('open');
+    positionDropdown(trigger, dropdown);
   }
+
   dropdown.querySelectorAll('input[type=checkbox]').forEach(cb => {
     cb.onchange = () => syncTrigger(id);
   });
 }
+
+// Reposition on scroll/resize
+window.addEventListener('scroll', () => {
+  document.querySelectorAll('.ms-dropdown.open').forEach(dd => {
+    const id = dd.id.replace('-dropdown','');
+    const trigger = document.getElementById(id + '-trigger');
+    if (trigger) positionDropdown(trigger, dd);
+  });
+}, true);
+
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.ms-dropdown.open').forEach(dd => {
+    const id = dd.id.replace('-dropdown','');
+    const trigger = document.getElementById(id + '-trigger');
+    if (trigger) positionDropdown(trigger, dd);
+  });
+});
 
 function syncTrigger(id) {
   const trigger = document.getElementById(id + '-trigger');
@@ -1208,8 +1286,11 @@ function msReset(id) { msSet(id, []); }
 
 // fecha dropdowns ao clicar fora
 document.addEventListener('click', e => {
-  if (!e.target.closest('.ms-wrap')) {
-    document.querySelectorAll('.ms-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!e.target.closest('.ms-wrap') && !e.target.closest('.ms-dropdown')) {
+    document.querySelectorAll('.ms-dropdown.open').forEach(d => {
+      d.classList.remove('open');
+      _portalClose(d);
+    });
     document.querySelectorAll('.ms-trigger.open').forEach(t => t.classList.remove('open'));
   }
 });
@@ -1431,7 +1512,8 @@ async function deleteTrade(id) {
 </div>
 
 <!-- DIALOG NOVA OPERAÇÃO -->
-<dialog id="newTradeDialog" aria-labelledby="dlg-title">
+<div id="newTradeDialog" class="ntd-overlay" role="dialog" aria-labelledby="dlg-title" aria-modal="true">
+  <div class="ntd-modal">
   <div class="dlg-header">
     <h2 id="dlg-title">Nova Operação</h2>
     <button class="dlg-close" onclick="closeNewTradeDialog()" aria-label="Fechar">✕</button>
@@ -1498,7 +1580,8 @@ async function deleteTrade(id) {
       <button class="btn" onclick="closeNewTradeDialog()">Cancelar</button>
     </div>
   </div>
-</dialog>
+  </div><!-- /ntd-modal -->
+</div><!-- /ntd-overlay -->
 
 </body>
 </html>
