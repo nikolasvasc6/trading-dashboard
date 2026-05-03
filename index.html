@@ -341,6 +341,16 @@
     <div class="card"><div class="card-title">Resultado por Mês</div><div class="chart-wrap" style="height:200px"><canvas id="monthChart"></canvas></div></div>
   </div>
 
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Resultado por Estratégia</div>
+    <div class="chart-wrap" id="stratChartWrap" style="height:260px">
+      <canvas id="stratChart"></canvas>
+    </div>
+    <div id="stratEmpty" style="display:none;padding:40px;text-align:center;font-size:13px;color:var(--muted)">
+      Nenhuma estratégia registrada ainda.
+    </div>
+  </div>
+
   <!-- FORM NOVA OPERAÇÃO -->
   </div><!-- /tab-principal -->
 
@@ -682,7 +692,7 @@ function switchTab(name) {
   // Re-render charts when switching to principal (canvas needs visible container)
   if (name === 'principal') {
     setTimeout(() => {
-      renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart();
+      renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart();
     }, 50);
   }
   // Remember last tab
@@ -905,6 +915,85 @@ function renderWinLossChart() {
   });
 }
 
+function renderStratChart() {
+  const d = getFiltered();
+  // aggregate: each trade may have multiple strategies (array)
+  const totals = {};
+  d.forEach(t => {
+    const arr = Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []);
+    if (!arr.length) return;
+    arr.forEach(s => {
+      if (!s) return;
+      totals[s] = (totals[s] || 0) + t.result;
+    });
+  });
+
+  const canvas = document.getElementById('stratChart');
+  const empty  = document.getElementById('stratEmpty');
+  const wrap   = document.getElementById('stratChartWrap');
+
+  if (!Object.keys(totals).length) {
+    wrap.style.display  = 'none';
+    empty.style.display = 'block';
+    if (charts.strat) { charts.strat.destroy(); charts.strat = null; }
+    return;
+  }
+  wrap.style.display  = 'block';
+  empty.style.display = 'none';
+
+  // sort best → worst
+  const sorted  = Object.entries(totals).sort((a,b) => b[1] - a[1]);
+  const labels  = sorted.map(([k]) => k);
+  const values  = sorted.map(([,v]) => parseFloat(v.toFixed(2)));
+  const bgColors = values.map(v => v >= 0 ? '#3b6d1188' : '#a32d2d88');
+  const bdColors = values.map(v => v >= 0 ? '#97c459'   : '#f09595');
+
+  // dynamic height: min 200px, 36px per bar
+  const h = Math.max(200, labels.length * 42);
+  wrap.style.height = h + 'px';
+
+  if (charts.strat) charts.strat.destroy();
+  charts.strat = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: bgColors,
+        borderColor:     bdColors,
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',   // horizontal bars
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.x;
+              return ' ' + (v >= 0 ? '+' : '') + '$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2});
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(128,128,128,.1)' },
+          ticks: { color:'#888780', font:{size:11}, callback: v => '$'+(v/1000).toFixed(1)+'k' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color:'#e8e8e0', font:{size:12} }
+        }
+      }
+    }
+  });
+}
+
 function renderMarketChart() {
   const markets = ['Forex','Crypto','B3 Futuros','Ações B3'];
   const colors  = {'Forex':'#185fa5','Crypto':'#854f0b','B3 Futuros':'#0f6e56','Ações B3':'#534ab7'};
@@ -976,7 +1065,7 @@ function renderTable() {
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderTable(); }
+function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart(); renderStratChart(); renderTable(); }
 
 /* ── form nova operação ───────────────────────────────────── */
 function toggleForm() {
