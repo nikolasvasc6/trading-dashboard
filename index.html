@@ -83,8 +83,32 @@
   .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
 
   /* FORM */
-  .form-panel{background:var(--surface);border:.5px solid var(--border);border-radius:var(--rl);padding:24px;margin-bottom:24px;display:none;}
-  .form-panel.open{display:block;}
+  /* dialog nova operação */
+  /* dialog nova operação — centralizado cross-browser */
+  dialog#newTradeDialog{
+    position:fixed;inset:0;margin:auto; /* força centro em Safari/iOS */
+    background:var(--surface);color:var(--text);
+    border:.5px solid var(--border);border-radius:var(--rl);
+    padding:0;width:min(700px,95vw);
+    max-height:min(90vh,800px);overflow-y:auto;
+    box-shadow:0 24px 60px rgba(0,0,0,.65);
+    top:50%;left:50%;transform:translate(-50%,-50%); /* fallback extra */
+  }
+  dialog#newTradeDialog::backdrop{
+    background:rgba(0,0,0,.6);backdrop-filter:blur(3px);
+  }
+  dialog#newTradeDialog[open]{
+    animation:dlgIn .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes dlgIn{
+    from{opacity:0;transform:translate(-50%,-50%) scale(.95)}
+    to  {opacity:1;transform:translate(-50%,-50%) scale(1)}
+  }
+  .dlg-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;}
+  .dlg-header h2{font-size:16px;font-weight:500;letter-spacing:-.2px;}
+  .dlg-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:4px 8px;border-radius:var(--r);transition:all .15s;}
+  .dlg-close:hover{color:var(--text);background:var(--surface-2);}
+  .dlg-body{padding:20px 24px 24px;}
   .form-title{font-size:15px;font-weight:500;margin-bottom:20px;}
   .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;}
   .form-group{display:flex;flex-direction:column;gap:5px;}
@@ -218,7 +242,16 @@
     .charts-top .card:first-child .chart-wrap{height:180px !important;}
     .charts-top .card:last-child .chart-wrap{height:150px !important;}
     .charts-bottom .chart-wrap{height:160px !important;}
-    .form-panel{padding:16px;}
+    dialog#newTradeDialog{
+      width:100vw;max-height:85vh;
+      border-radius:var(--rl) var(--rl) 0 0;
+      top:auto;bottom:0;left:0;
+      transform:none;
+      inset:auto 0 0 0;
+      margin:0;
+    }
+    dialog#newTradeDialog[open]{animation:dlgSlideUp .22s ease;}
+    @keyframes dlgSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
     .form-grid{grid-template-columns:1fr;}
     .form-group input,.form-group select{font-size:16px;padding:10px;}
     .form-actions{flex-direction:column;}
@@ -351,75 +384,12 @@
     </div>
   </div>
 
-  <!-- FORM NOVA OPERAÇÃO -->
-  </div><!-- /tab-principal -->
+  <!-- /tab-principal -->
+  </div>
 
   <!-- VIEW: OPERAÇÕES -->
   <div class="tab-view" id="tab-operacoes">
 
-  <div class="form-panel" id="formPanel">
-    <div class="form-title">Registrar Operação</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Data</label><input type="date" id="f-date"></div>
-      <div class="form-group"><label>Hora</label><input type="time" id="f-time"></div>
-      <div class="form-group"><label>Mercado</label>
-        <select id="f-market">
-          <option value="Forex">Forex</option>
-          <option value="Crypto">Crypto</option>
-          <option value="B3 Futuros">B3 Futuros</option>
-          <option value="Ações B3">Ações B3</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Ativo</label><input type="text" id="f-asset" list="asset-list" placeholder="ex: EUR/USD" autocomplete="off"></div>
-<datalist id="asset-list"></datalist>
-      <div class="form-group"><label>Direção</label>
-        <select id="f-dir"><option value="Long">Long</option><option value="Short">Short</option></select>
-      </div>
-      <div class="form-group"><label>Resultado ($)</label><input type="number" id="f-result" placeholder="ex: 150.00" step="0.01"></div>
-      <div class="form-group"><label>Estratégia</label>
-        <div class="ms-wrap" id="f-strategy-wrap">
-          <div class="ms-trigger" id="f-strategy-trigger" onclick="toggleMs('f-strategy')">
-            <span class="ms-placeholder">— Selecione —</span>
-          </div>
-          <div class="ms-dropdown" id="f-strategy-dropdown">
-            <label class="ms-item"><input type="checkbox" value="Liquidez"><span class="ms-swatch" style="background:#1d4ed8"></span> Liquidez</label>
-            <label class="ms-item"><input type="checkbox" value="POI"><span class="ms-swatch" style="background:#6d28d9"></span> POI</label>
-            <label class="ms-item"><input type="checkbox" value="Wyckoff"><span class="ms-swatch" style="background:#065f46"></span> Wyckoff</label>
-            <label class="ms-item"><input type="checkbox" value="SMS"><span class="ms-swatch" style="background:#92400e"></span> SMS</label>
-            <label class="ms-item"><input type="checkbox" value="CHoC"><span class="ms-swatch" style="background:#991b1b"></span> CHoC</label>
-            <label class="ms-item"><input type="checkbox" value="Inversão de fluxo"><span class="ms-swatch" style="background:#166534"></span> Inversão de fluxo</label>
-            <label class="ms-item"><input type="checkbox" value="Divergência RSI"><span class="ms-swatch" style="background:#9a3412"></span> Divergência RSI</label>
-            <label class="ms-item"><input type="checkbox" value="Troca de polaridade"><span class="ms-swatch" style="background:#9d174d"></span> Troca de polaridade</label>
-            <label class="ms-item"><input type="checkbox" value="Região de demanda"><span class="ms-swatch" style="background:#155e75"></span> Região de demanda</label>
-            <label class="ms-item"><input type="checkbox" value="Região de oferta"><span class="ms-swatch" style="background:#86198f"></span> Região de oferta</label>
-            <label class="ms-item"><input type="checkbox" value="IFVG"><span class="ms-swatch" style="background:#14532d"></span> IFVG</label>
-          </div>
-        </div>
-      </div>
-      <div class="form-group"><label>Timeframe</label>
-        <div class="ms-wrap" id="f-tf-wrap">
-          <div class="ms-trigger" id="f-tf-trigger" onclick="toggleMs('f-tf')">
-            <span class="ms-placeholder">— Selecione —</span>
-          </div>
-          <div class="ms-dropdown" id="f-tf-dropdown">
-            <label class="ms-item"><input type="checkbox" value="1m"><span class="ms-swatch" style="background:#0369a1"></span> 1m</label>
-            <label class="ms-item"><input type="checkbox" value="2m"><span class="ms-swatch" style="background:#5b21b6"></span> 2m</label>
-            <label class="ms-item"><input type="checkbox" value="3m"><span class="ms-swatch" style="background:#831843"></span> 3m</label>
-            <label class="ms-item"><input type="checkbox" value="5m"><span class="ms-swatch" style="background:#14532d"></span> 5m</label>
-            <label class="ms-item"><input type="checkbox" value="15m"><span class="ms-swatch" style="background:#713f12"></span> 15m</label>
-            <label class="ms-item"><input type="checkbox" value="30m"><span class="ms-swatch" style="background:#7c2d12"></span> 30m</label>
-            <label class="ms-item"><input type="checkbox" value="1hr"><span class="ms-swatch" style="background:#7f1d1d"></span> 1hr</label>
-            <label class="ms-item"><input type="checkbox" value="4hr"><span class="ms-swatch" style="background:#581c87"></span> 4hr</label>
-          </div>
-        </div>
-      </div>
-      <div class="form-group"><label>Observação</label><input type="text" id="f-notes" placeholder="opcional"></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-primary" onclick="addTrade()">Registrar</button>
-      <button class="btn" onclick="toggleForm()">Cancelar</button>
-    </div>
-  </div>
 
   <!-- FILTROS DA ABA OPERAÇÕES -->
   <div class="op-filters" id="op-filters">
@@ -1069,18 +1039,40 @@ function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); 
 
 /* ── form nova operação ───────────────────────────────────── */
 function toggleForm() {
-  const p = document.getElementById('formPanel');
-  p.classList.toggle('open');
-  if (p.classList.contains('open')) {
-    document.getElementById('f-date').value  = new Date().toISOString().split('T')[0];
-    document.getElementById('f-asset').value = '';
-    document.getElementById('f-result').value= '';
-    document.getElementById('f-notes').value = '';
-    msReset('f-strategy');
-    msReset('f-tf');
-    p.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
+  const dlg = document.getElementById('newTradeDialog');
+  if (dlg.open) { closeNewTradeDialog(); return; }
+  // reset fields
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const brtOffset = -3 * 60; // UTC-3 Brasília
+  const localOffset = now.getTimezoneOffset();
+  const brt = new Date(now.getTime() + (localOffset + brtOffset) * 60000);
+  document.getElementById('f-date').value  = brt.getFullYear()+'-'+pad(brt.getMonth()+1)+'-'+pad(brt.getDate());
+  document.getElementById('f-time').value  = pad(brt.getHours())+':'+pad(brt.getMinutes());
+  document.getElementById('f-asset').value = '';
+  document.getElementById('f-result').value= '';
+  document.getElementById('f-notes').value = '';
+  msReset('f-strategy');
+  msReset('f-tf');
+  dlg.showModal();
 }
+
+function closeNewTradeDialog() {
+  document.getElementById('newTradeDialog').close();
+}
+
+// Close on backdrop click
+document.addEventListener('DOMContentLoaded', () => {
+  const dlg = document.getElementById('newTradeDialog');
+  if (dlg) {
+    dlg.addEventListener('click', e => {
+      const rect = dlg.getBoundingClientRect();
+      const outside = e.clientX < rect.left || e.clientX > rect.right ||
+                      e.clientY < rect.top  || e.clientY > rect.bottom;
+      if (outside) closeNewTradeDialog();
+    });
+  }
+});
 
 async function addTrade() {
   const date     = document.getElementById('f-date').value;
@@ -1095,7 +1087,7 @@ async function addTrade() {
   if (!date || !asset || isNaN(result)) { alert('Preencha Data, Ativo e Resultado.'); return; }
   try {
     await window._fbPush({ date, time, market, asset, dir, result, strategy, tf, notes });
-    document.getElementById('formPanel').classList.remove('open');
+    closeNewTradeDialog();
     showToast('Operação registrada!');
   } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
 }
@@ -1437,6 +1429,76 @@ async function deleteTrade(id) {
     </div>
   </div>
 </div>
+
+<!-- DIALOG NOVA OPERAÇÃO -->
+<dialog id="newTradeDialog" aria-labelledby="dlg-title">
+  <div class="dlg-header">
+    <h2 id="dlg-title">Nova Operação</h2>
+    <button class="dlg-close" onclick="closeNewTradeDialog()" aria-label="Fechar">✕</button>
+  </div>
+  <div class="dlg-body">
+    <div class="form-grid">
+      <div class="form-group"><label>Data</label><input type="date" id="f-date"></div>
+      <div class="form-group"><label>Hora</label><input type="time" id="f-time"></div>
+      <div class="form-group"><label>Mercado</label>
+        <select id="f-market">
+          <option value="Forex">Forex</option>
+          <option value="Crypto">Crypto</option>
+          <option value="B3 Futuros">B3 Futuros</option>
+          <option value="Ações B3">Ações B3</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Ativo</label><input type="text" id="f-asset" list="asset-list" placeholder="ex: EUR/USD" autocomplete="off"></div>
+      <datalist id="asset-list"></datalist>
+      <div class="form-group"><label>Direção</label>
+        <select id="f-dir"><option value="Long">Long</option><option value="Short">Short</option></select>
+      </div>
+      <div class="form-group"><label>Resultado ($)</label><input type="number" id="f-result" placeholder="ex: 150.00" step="0.01"></div>
+      <div class="form-group"><label>Estratégia</label>
+        <div class="ms-wrap" id="f-strategy-wrap">
+          <div class="ms-trigger" id="f-strategy-trigger" onclick="toggleMs('f-strategy')">
+            <span class="ms-placeholder">— Selecione —</span>
+          </div>
+          <div class="ms-dropdown" id="f-strategy-dropdown">
+            <label class="ms-item"><input type="checkbox" value="Liquidez"><span class="ms-swatch" style="background:#1d4ed8"></span> Liquidez</label>
+            <label class="ms-item"><input type="checkbox" value="POI"><span class="ms-swatch" style="background:#6d28d9"></span> POI</label>
+            <label class="ms-item"><input type="checkbox" value="Wyckoff"><span class="ms-swatch" style="background:#065f46"></span> Wyckoff</label>
+            <label class="ms-item"><input type="checkbox" value="SMS"><span class="ms-swatch" style="background:#92400e"></span> SMS</label>
+            <label class="ms-item"><input type="checkbox" value="CHoC"><span class="ms-swatch" style="background:#991b1b"></span> CHoC</label>
+            <label class="ms-item"><input type="checkbox" value="Inversão de fluxo"><span class="ms-swatch" style="background:#166534"></span> Inversão de fluxo</label>
+            <label class="ms-item"><input type="checkbox" value="Divergência RSI"><span class="ms-swatch" style="background:#9a3412"></span> Divergência RSI</label>
+            <label class="ms-item"><input type="checkbox" value="Troca de polaridade"><span class="ms-swatch" style="background:#9d174d"></span> Troca de polaridade</label>
+            <label class="ms-item"><input type="checkbox" value="Região de demanda"><span class="ms-swatch" style="background:#155e75"></span> Região de demanda</label>
+            <label class="ms-item"><input type="checkbox" value="Região de oferta"><span class="ms-swatch" style="background:#86198f"></span> Região de oferta</label>
+            <label class="ms-item"><input type="checkbox" value="IFVG"><span class="ms-swatch" style="background:#14532d"></span> IFVG</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group"><label>Timeframe</label>
+        <div class="ms-wrap" id="f-tf-wrap">
+          <div class="ms-trigger" id="f-tf-trigger" onclick="toggleMs('f-tf')">
+            <span class="ms-placeholder">— Selecione —</span>
+          </div>
+          <div class="ms-dropdown" id="f-tf-dropdown">
+            <label class="ms-item"><input type="checkbox" value="1m"><span class="ms-swatch" style="background:#0369a1"></span> 1m</label>
+            <label class="ms-item"><input type="checkbox" value="2m"><span class="ms-swatch" style="background:#5b21b6"></span> 2m</label>
+            <label class="ms-item"><input type="checkbox" value="3m"><span class="ms-swatch" style="background:#831843"></span> 3m</label>
+            <label class="ms-item"><input type="checkbox" value="5m"><span class="ms-swatch" style="background:#14532d"></span> 5m</label>
+            <label class="ms-item"><input type="checkbox" value="15m"><span class="ms-swatch" style="background:#713f12"></span> 15m</label>
+            <label class="ms-item"><input type="checkbox" value="30m"><span class="ms-swatch" style="background:#7c2d12"></span> 30m</label>
+            <label class="ms-item"><input type="checkbox" value="1hr"><span class="ms-swatch" style="background:#7f1d1d"></span> 1hr</label>
+            <label class="ms-item"><input type="checkbox" value="4hr"><span class="ms-swatch" style="background:#581c87"></span> 4hr</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group"><label>Observação</label><input type="text" id="f-notes" placeholder="opcional"></div>
+    </div>
+    <div class="form-actions" style="margin-top:20px">
+      <button class="btn btn-primary" onclick="addTrade()">Registrar</button>
+      <button class="btn" onclick="closeNewTradeDialog()">Cancelar</button>
+    </div>
+  </div>
+</dialog>
 
 </body>
 </html>
