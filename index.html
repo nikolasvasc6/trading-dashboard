@@ -177,6 +177,15 @@
     .op-filter-actions{margin-left:0;width:100%;justify-content:flex-end;}
   }
 
+  /* last-N filter */
+  .lastn-wrap{display:flex;align-items:center;gap:6px;margin-left:8px;}
+  .lastn-wrap label{font-size:12px;color:var(--muted);white-space:nowrap;}
+  .lastn-input{background:var(--surface-2);border:.5px solid var(--border);color:var(--text);
+    padding:4px 8px;border-radius:20px;font-size:12px;font-weight:500;outline:none;
+    width:72px;text-align:center;}
+  .lastn-input:focus{border-color:var(--text);}
+  .lastn-input::placeholder{color:var(--faint);}
+  @media(max-width:640px){.lastn-wrap label{display:none;} .lastn-input{width:60px;}}
   /* TAB NAVIGATION */
   .tab-nav{display:flex;gap:2px;margin-bottom:24px;background:var(--surface-2);border-radius:var(--rl);padding:4px;width:fit-content;}
   .tab-btn{padding:7px 20px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .18s;}
@@ -332,6 +341,11 @@
     <span class="chip month"        data-month="semana" onclick="setPeriod('semana')">Semana</span>
     <span class="chip month"        data-month="ano"    onclick="setPeriod('ano')">Ano</span>
     <div id="month-chips" style="display:contents"></div>
+    <div class="lastn-wrap">
+      <label for="lastn-input">Últimas</label>
+      <input class="lastn-input" id="lastn-input" type="number" min="1" step="1"
+             placeholder="todas" oninput="setLastN(this.value)">
+    </div>
   </div>
 
   <!-- BALANCE BANNER -->
@@ -566,9 +580,23 @@ onValue(sRef, (snap) => {
 <script>
 let trades        = [];
 let activeMarket  = 'todos';
+let lastN         = 0; // 0 = no limit
 let activeMonth   = 'todos'; // 'todos' | 'dia' | 'semana' | 'ano' | 'YYYY-MM'
 let charts        = {};
 let initialBalance = 0;
+
+/* ── filtro últimas N operações ───────────────────────────── */
+function setLastN(val) {
+  const n = parseInt(val);
+  lastN = (n > 0) ? n : 0;
+  renderAll();
+}
+
+function applyLastN(data) {
+  // data should already be sorted newest-first before calling this
+  if (!lastN || lastN >= data.length) return data;
+  return data.slice(0, lastN);
+}
 
 /* ── filtros da aba operações ─────────────────────────────── */
 const opFilters = { strategy:'', market:'', dateFrom:'', dateTo:'' };
@@ -641,7 +669,8 @@ function clearOpFilters() {
 }
 
 function getOpFiltered() {
-  return trades.filter(t => {
+  // Parte de getFiltered() → já aplica mercado global + período + lastN
+  return getFiltered().filter(t => {
     if (opFilters.market   && t.market !== opFilters.market) return false;
     if (opFilters.strategy) {
       const arr = Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[]);
@@ -718,7 +747,7 @@ function getFiltered() {
   const monStr = mon.getFullYear()+'-'+pad(mon.getMonth()+1)+'-'+pad(mon.getDate());
   const yearStr = String(today.getFullYear());
 
-  return trades.filter(t => {
+  const filtered = trades.filter(t => {
     const mOk = activeMarket === 'todos' || t.market === activeMarket;
     let mnOk = true;
     if      (activeMonth === 'todos')  mnOk = true;
@@ -729,6 +758,13 @@ function getFiltered() {
     else                               mnOk = t.date.substring(0,7) === activeMonth;
     return mOk && mnOk;
   });
+  // Sort newest-first THEN apply lastN cap (single source of truth)
+  const sorted = [...filtered].sort((a,b) => {
+    const ka = (a.date||'')+'T'+(a.time||'00:00');
+    const kb = (b.date||'')+'T'+(b.time||'00:00');
+    return kb.localeCompare(ka);
+  });
+  return applyLastN(sorted);
 }
 
 function setMarket(m) {
@@ -850,7 +886,8 @@ function renderKPIs() {
   document.getElementById('kpi-drawdown-sub').textContent= 'Maior recuo do pico';
   document.getElementById('kpi-total').textContent       = k.total;
   document.getElementById('kpi-total').className         = 'kpi-value';
-  document.getElementById('kpi-total-sub').textContent   = trades.length!==k.total ? 'de '+trades.length+' totais' : 'operações registradas';
+  const lastnLabel = lastN && lastN < trades.length ? ' (últimas '+lastN+')' : '';
+  document.getElementById('kpi-total-sub').textContent   = trades.length!==k.total ? 'de '+trades.length+' totais'+lastnLabel : 'operações registradas';
 }
 
 /* ── gráficos ─────────────────────────────────────────────── */
