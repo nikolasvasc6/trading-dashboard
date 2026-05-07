@@ -553,28 +553,6 @@
     </div>
   </div>
 
-  <!-- R:R ANALYSIS -->
-  <div class="card" style="margin-bottom:24px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
-      <div class="card-title" style="margin-bottom:0">Análise de Risco:Retorno</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="rr-period-btns">
-        <button class="chip month active" data-rr="week"  onclick="setRRPeriod('week')">Semana</button>
-        <button class="chip month"        data-rr="month" onclick="setRRPeriod('month')">Mês</button>
-        <button class="chip month"        data-rr="year"  onclick="setRRPeriod('year')">Ano</button>
-        <button class="chip month"        data-rr="all"   onclick="setRRPeriod('all')">Total</button>
-      </div>
-    </div>
-    <!-- KPI strip -->
-    <div id="rr-kpis" style="display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap;"></div>
-    <!-- Chart -->
-    <div id="rrChartWrap" style="position:relative;width:100%;height:220px;">
-      <canvas id="rrChart"></canvas>
-    </div>
-    <div id="rrEmpty" style="display:none;padding:40px;text-align:center;font-size:13px;color:var(--muted)">
-      Sem dados de R:R para o período. Certifique-se de que os trades possuem stop loss registrado.
-    </div>
-  </div>
-
   <!-- /tab-principal -->
   </div>
 
@@ -629,10 +607,10 @@
       <span id="table-count" style="font-size:12px;color:var(--muted)"></span>
     </div>
     <div id="tableBody"><div class="empty-state">Conectando ao banco de dados...</div></div>
-  </div><!-- /table-section -->
 
   </div><!-- /tab-operacoes -->
-</div><!-- /page -->
+  </div>
+</div>
 
 <!-- MODAL EDIÇÃO -->
 <div class="modal-overlay" id="editModal" style="display:none" onclick="closeModal(event)">
@@ -655,7 +633,6 @@
         <select id="e-dir"><option value="Long">Long</option><option value="Short">Short</option></select>
       </div>
       <div class="form-group"><label>Resultado ($)</label><input type="number" id="e-result" step="0.01"></div>
-      <div class="form-group"><label>Risco ($)</label><input type="number" id="e-risk" step="0.01" min="0" placeholder="ex: 50.00"></div>
       <div class="form-group"><label>Estratégia</label>
         <div class="ms-wrap" id="e-strategy-wrap">
           <div class="ms-trigger" id="e-strategy-trigger" onclick="toggleMs('e-strategy')">
@@ -734,7 +711,6 @@ window._fbSetBalance = (val)      => update(ref(db, 'settings'), { initialBalanc
 onValue(tRef, (snap) => {
   const raw = snap.val() || {};
   trades = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
-  console.log('[FIREBASE] trades recebidos:', trades.length, trades.map(t=>({id:t.id,date:t.date,asset:t.asset})));
   setStatus('on', 'Conectado · ' + trades.length + ' operações');
   if (!window._tabRestored) { window._tabRestored=true; restoreTab(); }
   buildMonthChips();
@@ -847,23 +823,9 @@ function clearOpFilters() {
   renderTable();
 }
 
-function getOpBaseData() {
-  const sorted = [...trades].sort((a,b) => {
-    const ka = (a.date||'')+'T'+(a.time||'00:00');
-    const kb = (b.date||'')+'T'+(b.time||'00:00');
-    return kb.localeCompare(ka);
-  });
-  const byMarket = activeMarket === 'todos'
-    ? sorted
-    : sorted.filter(t => t.market === activeMarket);
-  const result = applyLastN(byMarket);
-  console.log('[getOpBaseData] trades:', trades.length, '→ byMarket:', byMarket.length, '→ afterLastN:', result.length, '| activeMarket:', activeMarket, 'lastN:', lastN);
-  return result;
-}
-
 function getOpFiltered() {
-  const base = getOpBaseData();
-  const result = base.filter(t => {
+  // Parte de getFiltered() → já aplica mercado global + período + lastN
+  return getFiltered().filter(t => {
     if (opFilters.market   && t.market !== opFilters.market) return false;
     if (opFilters.strategy) {
       const arr = Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[]);
@@ -873,8 +835,6 @@ function getOpFiltered() {
     if (opFilters.dateTo   && t.date > opFilters.dateTo)   return false;
     return true;
   });
-  console.log('[getOpFiltered] base:', base.length, '→ result:', result.length, '| opFilters:', JSON.stringify(opFilters));
-  return result;
 }
 
 /* ── navegação por abas ───────────────────────────────────── */
@@ -886,7 +846,7 @@ function switchTab(name) {
   // Re-render charts when switching to principal (canvas needs visible container)
   if (name === 'principal') {
     setTimeout(() => {
-      renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart(); renderRRChart();
+      renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart();
     }, 50);
   }
   // Remember last tab
@@ -1196,202 +1156,6 @@ function renderStratChart() {
   });
 }
 
-/* ── Análise de Risco:Retorno ─────────────────────────────── */
-let rrPeriod = 'week';
-
-function setRRPeriod(p) {
-  rrPeriod = p;
-  document.querySelectorAll('[data-rr]').forEach(b =>
-    b.classList.toggle('active', b.dataset.rr === p));
-  renderRRChart();
-}
-
-function extractSL(trade) {
-  // Extrai stop loss do campo notes: "[sl 4512.24]" ou "EA auto-import" com risco manual
-  const notes = (trade.notes || '') + ' ' + (trade.open_price ? '' : '');
-  const m = notes.match(/\[sl\s*([\d.]+)\]/i);
-  if (m) return parseFloat(m[1]);
-  return null;
-}
-
-function calculateRR(trade) {
-  const profit = parseFloat(trade.result) || 0;
-
-  // Opção 1: risco manual em $ (trades registrados manualmente)
-  if (trade.risk_usd && parseFloat(trade.risk_usd) > 0) {
-    const risk = parseFloat(trade.risk_usd);
-    return parseFloat((profit / risk).toFixed(2));
-  }
-
-  // Opção 2: SL nos notes + preços (trades do EA)
-  const sl     = extractSL(trade);
-  const openPx = parseFloat(trade.open_price)  || 0;
-  const closePx= parseFloat(trade.close_price) || 0;
-  if (!sl || !openPx || !closePx) return null;
-
-  const riskDist = Math.abs(openPx - sl);
-  const moveDist = Math.abs(closePx - openPx);
-  if (riskDist === 0 || moveDist === 0) return null;
-
-  const riskAmt = Math.abs(profit) * (riskDist / moveDist);
-  if (riskAmt === 0) return null;
-
-  return parseFloat((profit / riskAmt).toFixed(2));
-}
-
-function getRRPeriodTrades() {
-  const base = getFiltered(); // respeita filtros + lastN
-  const today = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  const iso  = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-
-  let from = '';
-  if (rrPeriod === 'week') {
-    const dow = today.getDay()===0?6:today.getDay()-1;
-    const mon = new Date(today); mon.setDate(today.getDate()-dow);
-    from = iso(mon);
-  } else if (rrPeriod === 'month') {
-    from = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-01';
-  } else if (rrPeriod === 'year') {
-    from = today.getFullYear()+'-01-01';
-  }
-  // 'all' → sem filtro de data além do getFiltered()
-  if (!from) return base;
-  return base.filter(t => t.date >= from);
-}
-
-function renderRRChart() {
-  const canvas  = document.getElementById('rrChart');
-  const wrap    = document.getElementById('rrChartWrap');
-  const empty   = document.getElementById('rrEmpty');
-  const kpiDiv  = document.getElementById('rr-kpis');
-  if (!canvas) return;
-
-  const trades  = getRRPeriodTrades();
-  const rrData  = trades
-    .map(t => ({ ...t, rr: calculateRR(t) }))
-    .filter(t => t.rr !== null)
-    .sort((a,b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||''));
-
-  if (!rrData.length) {
-    wrap.style.display  = 'none';
-    empty.style.display = 'block';
-    kpiDiv.innerHTML    = '';
-    if (charts.rr) { charts.rr.destroy(); charts.rr = null; }
-    return;
-  }
-  wrap.style.display  = 'block';
-  empty.style.display = 'none';
-
-  // ── KPIs ─────────────────────────────────────────────────
-  const rrVals  = rrData.map(t => t.rr);
-  const rrSum   = rrVals.reduce((a,v) => a+v, 0);
-  const rrAvg   = rrSum / rrVals.length;
-  const rrWins  = rrVals.filter(v => v > 0).length;
-  const rrLoss  = rrVals.filter(v => v <= 0).length;
-  const rrBest  = Math.max(...rrVals);
-  const rrWorst = Math.min(...rrVals);
-
-  const kpiStyle = (v) => v >= 0 ? 'color:var(--green)' : 'color:var(--red)';
-  kpiDiv.innerHTML = `
-    <div>
-      <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">R:R Médio</div>
-      <div style="font-size:22px;font-weight:600;letter-spacing:-.4px;${kpiStyle(rrAvg)}">${rrAvg>=0?'+':''}${rrAvg.toFixed(2)}R</div>
-    </div>
-    <div>
-      <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">R:R Total</div>
-      <div style="font-size:22px;font-weight:600;letter-spacing:-.4px;${kpiStyle(rrSum)}">${rrSum>=0?'+':''}${rrSum.toFixed(2)}R</div>
-    </div>
-    <div>
-      <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Melhor</div>
-      <div style="font-size:22px;font-weight:600;letter-spacing:-.4px;color:var(--green)">+${rrBest.toFixed(2)}R</div>
-    </div>
-    <div>
-      <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Pior</div>
-      <div style="font-size:22px;font-weight:600;letter-spacing:-.4px;color:var(--red)">${rrWorst.toFixed(2)}R</div>
-    </div>
-    <div>
-      <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Trades</div>
-      <div style="font-size:16px;font-weight:600;color:var(--text);margin-top:3px">
-        <span style="color:var(--green)">${rrWins}W</span>
-        <span style="color:var(--muted);font-weight:400;margin:0 3px">/</span>
-        <span style="color:var(--red)">${rrLoss}L</span>
-      </div>
-    </div>`;
-
-  // ── Chart ─────────────────────────────────────────────────
-  const labels = rrData.map((_,i) => '#'+(i+1));
-  const values = rrData.map(t => t.rr);
-  const bgPos  = '#3b6d1188'; const bgNeg = '#a32d2d88';
-  const bdPos  = '#5cb87a';   const bdNeg = '#e07070';
-
-  // Average line dataset
-  const avgArr = new Array(values.length).fill(parseFloat(rrAvg.toFixed(2)));
-
-  if (charts.rr) charts.rr.destroy();
-  charts.rr = new Chart(canvas, {
-    data: {
-      labels,
-      datasets: [
-        {
-          type: 'bar',
-          label: 'R:R por Trade',
-          data: values,
-          backgroundColor: ctx => makeBarGradient(ctx, values[ctx.dataIndex]>=0?'#3b6d11':'#a32d2d', ctx.dataIndex, 0.85, 0.3),
-          borderColor: values.map(v => v>=0 ? bdPos : bdNeg),
-          borderWidth: 1.5,
-          borderRadius: 4,
-          order: 2,
-        },
-        {
-          type: 'line',
-          label: 'Média',
-          data: avgArr,
-          borderColor: 'rgba(212,150,58,.8)',
-          borderWidth: 1.5,
-          borderDash: [5,4],
-          pointRadius: 0,
-          tension: 0,
-          fill: false,
-          order: 1,
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: (items) => {
-              const t = rrData[items[0].dataIndex];
-              return (t.asset||'') + ' · ' + (t.date||'');
-            },
-            label: (ctx) => {
-              if (ctx.datasetIndex === 1) return ' Média: '+(ctx.parsed.y>=0?'+':'')+ctx.parsed.y+'R';
-              const v = ctx.parsed.y;
-              return ' R:R: '+(v>=0?'+':'')+v+'R';
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid:  { display: false },
-          ticks: { color:'#7a8494', font:{size:10}, maxTicksLimit:12 }
-        },
-        y: {
-          grid:  { color:'rgba(255,255,255,.04)' },
-          ticks: { color:'#7a8494', font:{size:11},
-            callback: v => (v>=0?'+':'')+v+'R'
-          }
-        }
-      }
-    }
-  });
-}
-
 function renderMarketChart() {
   const markets = ['Forex','Crypto','B3 Futuros','Ações B3'];
   const colors  = {'Forex':'#185fa5','Crypto':'#854f0b','B3 Futuros':'#0f6e56','Ações B3':'#534ab7'};
@@ -1429,59 +1193,41 @@ function renderMonthChart() {
 
 /* ── tabela ───────────────────────────────────────────────── */
 function renderTable() {
-  try { _renderTableInner(); } catch(e) { console.error("[renderTable ERROR]", e); document.getElementById("tableBody").innerHTML = '<div class="empty-state" style="color:var(--red)">Erro ao renderizar tabela. Veja o console.</div>'; }
-}
-function _renderTableInner() {
-  console.log('[renderTable] chamado. tab-operacoes active:', document.getElementById('tab-operacoes')?.classList.contains('active'));
   const d = getOpFiltered().sort((a,b) => {
     const ka = (a.date||'') + 'T' + (a.time||'00:00');
     const kb = (b.date||'') + 'T' + (b.time||'00:00');
     return kb.localeCompare(ka);
   });
   document.getElementById('table-count').textContent =
-    d.length + ' operação' + (d.length!==1?'s':'') + (d.length!==getOpBaseData().length ? ' (de '+getOpBaseData().length+' total)' : '');
+    d.length + ' operação' + (d.length!==1?'s':'') + (d.length!==trades.length ? ' (de '+trades.length+' total)' : '');
   if (!d.length) {
-    console.log('[renderTable] d.length=0, mostrando empty state. tableBody exists:', !!document.getElementById('tableBody'));
-  document.getElementById('tableBody').innerHTML = '<div class="empty-state">Nenhuma operação para este filtro.</div>';
-  return;
+    document.getElementById('tableBody').innerHTML = '<div class="empty-state">Nenhuma operação para este filtro.</div>';
+    return;
   }
   const mC = {'Forex':'forex','Crypto':'crypto','B3 Futuros':'futuros','Ações B3':'acoes'};
-  const rows = d.map(t => {
-    const dateStr = t.date ? t.date.split('-').reverse().join('/') + (t.time ? ' ' + t.time : '') : '—';
-    const mktKey  = mC[t.market] || 'forex';
-    const dirKey  = (t.dir||'long').toLowerCase();
-    const strats  = (Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[])).map(colorCtag).join('') || '<span style="color:var(--muted)">—</span>';
-    const tfs     = (Array.isArray(t.tf)?t.tf:(t.tf?[t.tf]:[])).map(colorCtag).join('') || '<span style="color:var(--muted)">—</span>';
-    const pnlClr  = (parseFloat(t.result)||0) >= 0 ? 'var(--green)' : 'var(--red)';
-    return `<tr>
-      <td>${dateStr}</td>
-      <td><span class="badge badge-${mktKey}">${t.market||'—'}</span></td>
-      <td style="font-weight:500">${t.asset||'—'}</td>
-      <td><span class="badge badge-${dirKey}">${t.dir||'—'}</span></td>
-      <td style="font-weight:500;color:${pnlClr}">${fmt(parseFloat(t.result)||0)}</td>
-      <td>${strats}</td>
-      <td>${tfs}</td>
+  const rows = d.map(t => `
+    <tr>
+      <td>${t.date.split('-').reverse().join('/') + (t.time ? ' ' + t.time : '')}</td>
+      <td><span class="badge badge-${mC[t.market]}">${t.market}</span></td>
+      <td style="font-weight:500">${t.asset}</td>
+      <td><span class="badge badge-${(t.dir||'').toLowerCase()}">${t.dir||'—'}</span></td>
+      <td style="font-weight:500;color:${t.result>=0?'var(--green)':'var(--red)'}">${fmt(t.result)}</td>
+      <td>${(Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[])).map(colorCtag).join('')||'<span style="color:var(--muted)">—</span>'}</td>
+      <td>${(Array.isArray(t.tf)?t.tf:(t.tf?[t.tf]:[])).map(colorCtag).join('')||'<span style="color:var(--muted)">—</span>'}</td>
       <td style="color:var(--muted)">${t.notes||'—'}</td>
       <td>
         <button class="action-btn edit" onclick="openEdit('${t.id}')" title="Editar">✎</button>
         <button class="action-btn del"  onclick="deleteTrade('${t.id}')" title="Excluir">✕</button>
       </td>
-    </tr>`;
-  }).join('');
-  const tb = document.getElementById('tableBody');
-  console.log('[renderTable] renderizando', d.length, 'trades. tableBody:', !!tb);
-  if (tb) {
-    tb.innerHTML = `<table><thead><tr>
+    </tr>`).join('');
+  document.getElementById('tableBody').innerHTML =
+    `<table><thead><tr>
       <th>Data</th><th>Mercado</th><th>Ativo</th><th>Direção</th>
       <th>Resultado</th><th>Estratégia</th><th>TF</th><th>Obs.</th><th></th>
     </tr></thead><tbody>${rows}</tbody></table>`;
-    console.log('[renderTable] innerHTML gravado. rows:', d.length);
-  } else {
-    console.error('[renderTable] tableBody NAO encontrado no DOM!');
-  }
-} // end _renderTableInner
+}
 
-function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart(); renderRRChart(); renderTable(); }
+function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart(); renderStratChart(); renderTable(); }
 
 /* ── form nova operação ───────────────────────────────────── */
 function toggleForm() {
@@ -1538,13 +1284,12 @@ async function addTrade() {
   const asset    = document.getElementById('f-asset').value.trim();
   const dir      = document.getElementById('f-dir').value;
   const result   = parseFloat(document.getElementById('f-result').value);
-  const riskAmt  = parseFloat(document.getElementById('f-risk').value) || 0;
   const strategy = msGet('f-strategy');
   const tf       = msGet('f-tf');
   const notes    = document.getElementById('f-notes').value.trim();
   if (!date || !asset || isNaN(result)) { alert('Preencha Data, Ativo e Resultado.'); return; }
   try {
-    await window._fbPush({ date, time, market, asset, dir, result, risk_usd: riskAmt, strategy, tf, notes });
+    await window._fbPush({ date, time, market, asset, dir, result, strategy, tf, notes });
     closeNewTradeDialog();
     showToast('Operação registrada!');
   } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
@@ -1560,7 +1305,6 @@ function openEdit(id) {
   document.getElementById('e-asset').value  = t.asset;
   document.getElementById('e-dir').value    = t.dir;
   document.getElementById('e-result').value = t.result;
-  document.getElementById('e-risk').value   = t.risk_usd || '';
   document.getElementById('e-time').value   = t.time || '';
   document.getElementById('e-notes').value  = t.notes || '';
   msSet('e-strategy', Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []));
@@ -1579,14 +1323,13 @@ async function saveTrade() {
   const asset    = document.getElementById('e-asset').value.trim();
   const dir      = document.getElementById('e-dir').value;
   const result   = parseFloat(document.getElementById('e-result').value);
-  const riskAmt  = parseFloat(document.getElementById('e-risk').value) || 0;
   const time     = document.getElementById('e-time').value || '';
   const strategy = msGet('e-strategy');
   const tf       = msGet('e-tf');
   const notes    = document.getElementById('e-notes').value.trim();
   if (!date || !asset || isNaN(result)) { alert('Preencha Data, Ativo e Resultado.'); return; }
   try {
-    await window._fbUpdate(id, { date, time, market, asset, dir, result, risk_usd: riskAmt, strategy, tf, notes });
+    await window._fbUpdate(id, { date, time, market, asset, dir, result, strategy, tf, notes });
     document.getElementById('editModal').style.display = 'none';
     showToast('Operação atualizada!');
   } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
@@ -1985,7 +1728,6 @@ async function deleteTrade(id) {
         <select id="f-dir"><option value="Long">Long</option><option value="Short">Short</option></select>
       </div>
       <div class="form-group"><label>Resultado ($)</label><input type="number" id="f-result" placeholder="ex: 150.00" step="0.01"></div>
-      <div class="form-group"><label>Risco ($)</label><input type="number" id="f-risk" placeholder="ex: 50.00" step="0.01" min="0" title="Valor em $ que você arriscou nesta operação"></div>
       <div class="form-group"><label>Estratégia</label>
         <div class="ms-wrap" id="f-strategy-wrap">
           <div class="ms-trigger" id="f-strategy-trigger" onclick="toggleMs('f-strategy')">
