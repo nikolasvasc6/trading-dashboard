@@ -263,6 +263,75 @@
   .modal-title{font-size:15px;font-weight:600;margin-bottom:22px;letter-spacing:-.2px;}
   .modal-actions{display:flex;gap:8px;margin-top:22px;}
 
+
+  /* ── Calculadora de Posição ─────────────────────────────── */
+  .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+  .calc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:24px;}
+  .calc-card h3{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:500;margin-bottom:20px;}
+  .calc-market-selector{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+  .calc-mkt-btn{padding:8px 18px;border-radius:var(--rx);font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all var(--t);}
+  .calc-mkt-btn:hover{border-color:var(--border-strong);color:var(--text);}
+  .calc-mkt-btn.active{background:var(--surface-2);color:var(--text);border-color:var(--border-focus);}
+  .calc-mkt-btn.forex.active{background:var(--blue-bg);color:var(--blue);border-color:rgba(111,168,212,.4);}
+  .calc-mkt-btn.br.active{background:var(--green-bg);color:var(--green);border-color:rgba(92,184,122,.4);}
+  .calc-mkt-btn.us.active{background:var(--purple-bg);color:var(--purple);border-color:rgba(158,151,216,.4);}
+  .calc-field{margin-bottom:16px;}
+  .calc-field label{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:500;margin-bottom:6px;}
+  .calc-field input,.calc-field select{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:var(--r);font-size:14px;outline:none;transition:border-color var(--t);}
+  .calc-field input:focus,.calc-field select:focus{border-color:var(--border-focus);background:var(--surface-3);}
+  .calc-field input::placeholder{color:var(--faint);}
+  .calc-field select option{background:var(--surface);}
+  .calc-input-prefix{position:relative;}
+  .calc-input-prefix span{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none;}
+  .calc-input-prefix input{padding-left:30px;}
+  .calc-result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:24px;position:sticky;top:20px;}
+  .calc-result-main{text-align:center;padding:20px 0 24px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .calc-result-main .label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:500;margin-bottom:8px;}
+  .calc-result-main .value{font-size:52px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--text);}
+  .calc-result-main .unit{font-size:16px;font-weight:400;color:var(--muted);margin-left:4px;letter-spacing:0;}
+  .calc-result-main .sublabel{font-size:12px;color:var(--muted);margin-top:6px;}
+  .calc-result-rows{display:flex;flex-direction:column;gap:10px;}
+  .calc-result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface-2);border-radius:var(--r);}
+  .calc-result-row .rlabel{font-size:11.5px;color:var(--muted);}
+  .calc-result-row .rvalue{font-size:13px;font-weight:600;color:var(--text);}
+  .calc-rr-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
+  .calc-rr-item{background:var(--surface-2);border-radius:var(--r);padding:10px 14px;text-align:center;}
+  .calc-rr-item .rrlabel{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px;}
+  .calc-rr-item .rrvalue{font-size:18px;font-weight:600;letter-spacing:-.3px;}
+  .calc-copy-btn{width:100%;margin-top:20px;padding:12px;border-radius:var(--r);background:linear-gradient(135deg,#4a7c59,#3b6348);color:#d4f0dc;border:none;cursor:pointer;font-size:13.5px;font-weight:600;letter-spacing:.2px;transition:all var(--t);}
+  .calc-copy-btn:hover{filter:brightness(1.1);}
+  .calc-copy-btn:active{transform:scale(.98);}
+  .calc-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+  .calc-divider{height:1px;background:var(--border);margin:20px 0;}
+  .calc-optional-toggle{font-size:11.5px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:12px;user-select:none;}
+  .calc-optional-toggle:hover{color:var(--text);}
+  @media(max-width:640px){.calc-grid{grid-template-columns:1fr;} .calc-result-main .value{font-size:40px;}}
+
+  /* ── Calculadora: Warning lote mínimo ───────────────────────── */
+  .calc-min-warn{
+    display:flex;gap:14px;align-items:flex-start;
+    background:linear-gradient(135deg,var(--amber-bg),rgba(42,30,8,.85));
+    border:1px solid rgba(212,150,58,.35);
+    border-radius:var(--rl);padding:18px 20px;
+    animation:warnIn .25s ease;
+  }
+  @keyframes warnIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .calc-warn-icon{font-size:22px;line-height:1;flex-shrink:0;margin-top:1px;}
+  .calc-warn-title{font-size:13px;font-weight:600;color:var(--amber);margin-bottom:6px;letter-spacing:-.1px;}
+  .calc-warn-body{font-size:12.5px;color:var(--text);line-height:1.55;margin-bottom:8px;}
+  .calc-warn-suggest{
+    font-size:12px;color:var(--muted);
+    background:var(--surface-2);border-radius:var(--r);
+    padding:9px 13px;border-left:2px solid var(--amber);line-height:1.6;
+  }
+  .calc-warn-suggest strong{color:var(--amber);font-weight:600;}
+  /* Tag info ativo BR (WIN/WDO detectado) */
+  .calc-asset-info{
+    display:none;font-size:11.5px;color:var(--teal);
+    background:var(--teal-bg);border:1px solid rgba(74,184,154,.25);
+    border-radius:5px;padding:5px 10px;margin-top:6px;letter-spacing:.1px;
+  }
+  .calc-asset-info.visible{display:block;}
   /* ── Balance Banner ─────────────────────────────────────── */
   .balance-banner{
     background:var(--surface);
@@ -470,8 +539,9 @@
 
   <!-- TAB NAVIGATION -->
   <div class="tab-nav">
-    <button class="tab-btn active" id="btn-principal" onclick="switchTab('principal')">Principal</button>
-    <button class="tab-btn"        id="btn-operacoes" onclick="switchTab('operacoes')">Operações</button>
+    <button class="tab-btn active" id="btn-principal"   onclick="switchTab('principal')">Principal</button>
+    <button class="tab-btn"        id="btn-operacoes"  onclick="switchTab('operacoes')">Operações</button>
+    <button class="tab-btn"        id="btn-calculadora" onclick="switchTab('calculadora')">Calculadora</button>
   </div>
 
   <!-- VIEW: PRINCIPAL -->
@@ -608,8 +678,183 @@
     </div>
     <div id="tableBody"><div class="empty-state">Conectando ao banco de dados...</div></div>
 
+  </div><!-- /table-section -->
   </div><!-- /tab-operacoes -->
-  </div>
+
+  <!-- VIEW: CALCULADORA -->
+  <div class="tab-view" id="tab-calculadora">
+
+    <div class="calc-market-selector">
+      <button class="calc-mkt-btn forex active" data-mkt="forex" onclick="setCalcMarket('forex')">Forex</button>
+      <button class="calc-mkt-btn br"           data-mkt="br"    onclick="setCalcMarket('br')">Bolsa BR</button>
+      <button class="calc-mkt-btn us"           data-mkt="us"    onclick="setCalcMarket('us')">Bolsa US</button>
+    </div>
+
+    <div class="calc-grid">
+      <div class="calc-card">
+        <h3>Parâmetros</h3>
+
+        <!-- FOREX FIELDS -->
+        <div id="calc-forex-fields">
+          <div class="calc-field">
+            <label>Par de Moedas</label>
+            <select id="calc-forex-pair" onchange="onForexPairChange();calcPosition()">
+              <optgroup label="Principais">
+                <option value="EURUSD">EURUSD</option>
+                <option value="GBPUSD">GBPUSD</option>
+                <option value="AUDUSD">AUDUSD</option>
+                <option value="NZDUSD">NZDUSD</option>
+                <option value="USDCAD">USDCAD</option>
+                <option value="USDCHF">USDCHF</option>
+              </optgroup>
+              <optgroup label="Iene">
+                <option value="USDJPY">USDJPY</option>
+                <option value="EURJPY">EURJPY</option>
+                <option value="GBPJPY">GBPJPY</option>
+                <option value="CADJPY">CADJPY</option>
+                <option value="AUDJPY">AUDJPY</option>
+                <option value="CHFJPY">CHFJPY</option>
+              </optgroup>
+              <optgroup label="Cruzadas">
+                <option value="EURGBP">EURGBP</option>
+                <option value="EURAUD">EURAUD</option>
+                <option value="EURCAD">EURCAD</option>
+                <option value="GBPAUD">GBPAUD</option>
+                <option value="GBPCAD">GBPCAD</option>
+                <option value="GBPCHF">GBPCHF</option>
+              </optgroup>
+              <optgroup label="Metais">
+                <option value="XAUUSD">XAUUSD (Ouro)</option>
+                <option value="XAGUSD">XAGUSD (Prata)</option>
+              </optgroup>
+              <optgroup label="Índices CFD">
+                <option value="NAS100">NAS100</option>
+                <option value="US30">US30 (Dow)</option>
+                <option value="US500">US500 (S&amp;P)</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="calc-field">
+            <label>Moeda da Conta</label>
+            <select id="calc-forex-acct" onchange="toggleBRLRate();calcPosition()">
+              <option value="USD">USD</option>
+              <option value="BRL">BRL</option>
+            </select>
+          </div>
+          <div class="calc-field" id="calc-brl-rate-wrap" style="display:none">
+            <label>Dólar (R$)</label>
+            <input id="calc-forex-brl-rate" type="number" placeholder="ex: 5.70" value="5.70" step="0.01" min="1" oninput="calcPosition()">
+          </div>
+        </div>
+
+        <!-- BR FIELDS -->
+        <div id="calc-br-fields" style="display:none">
+          <div class="calc-field">
+            <label>Ativo</label>
+            <input id="calc-br-asset" type="text"
+              placeholder="ex: WINM25, WDO, PETR4, VALE3"
+              oninput="onBRAssetChange();calcPosition()" autocomplete="off">
+            <div class="calc-asset-info" id="calc-br-asset-info"></div>
+          </div>
+        </div>
+
+        <!-- US FIELDS -->
+        <div id="calc-us-fields" style="display:none">
+          <div class="calc-field">
+            <label>Ativo (ticker)</label>
+            <input id="calc-us-asset" type="text"
+              placeholder="ex: AAPL, TSLA, SPY"
+              oninput="calcPosition()" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- RISCO -->
+        <div class="calc-field">
+          <label id="calc-risk-label">Risco ($)</label>
+          <div class="calc-input-prefix">
+            <span id="calc-risk-symbol">$</span>
+            <input id="calc-risk" type="number" placeholder="50.00" min="0" step="0.01" oninput="calcPosition()">
+          </div>
+        </div>
+
+        <!-- STOP — label/placeholder dinâmicos -->
+        <div class="calc-field">
+          <label id="calc-pips-label">Stop em Pips</label>
+          <input id="calc-pips" type="number" placeholder="ex: 20" min="0.1" step="any" oninput="calcPosition()">
+        </div>
+
+        <div class="calc-divider"></div>
+        <div class="calc-optional-toggle" onclick="toggleCalcTP()">
+          <span id="calc-tp-arrow">▶</span>
+          <span>Alvo (Take Profit) — opcional</span>
+        </div>
+        <div id="calc-tp-wrap" style="display:none">
+          <div class="calc-field" style="margin-top:10px">
+            <label id="calc-tp-label">Alvo em Pips</label>
+            <input id="calc-tp-pips" type="number" placeholder="ex: 40" min="0.1" step="any" oninput="calcPosition()">
+          </div>
+        </div>
+      </div><!-- /calc-card -->
+
+      <div class="calc-result-card">
+        <h3>Resultado</h3>
+
+        <!-- Estado vazio -->
+        <div class="calc-empty" id="calc-empty">Preencha os campos para calcular</div>
+
+        <!-- Warning lote mínimo -->
+        <div id="calc-min-warn" class="calc-min-warn" style="display:none">
+          <div class="calc-warn-icon">⚠️</div>
+          <div style="flex:1">
+            <div class="calc-warn-title">Risco abaixo do mínimo permitido</div>
+            <div class="calc-warn-body"    id="calc-warn-body"></div>
+            <div class="calc-warn-suggest" id="calc-warn-suggest"></div>
+          </div>
+        </div>
+
+        <!-- Resultado normal -->
+        <div id="calc-result-content" style="display:none">
+          <div class="calc-result-main">
+            <div class="label" id="calc-main-label">Tamanho da Posição</div>
+            <div><span class="value" id="calc-main-value">—</span><span class="unit" id="calc-main-unit"></span></div>
+            <div class="sublabel" id="calc-main-sub"></div>
+          </div>
+          <div class="calc-result-rows">
+            <div class="calc-result-row">
+              <span class="rlabel">Distância do Stop</span>
+              <span class="rvalue" id="calc-stop-dist">—</span>
+            </div>
+            <div class="calc-result-row" id="calc-pip-row">
+              <span class="rlabel" id="calc-pip-row-label">Valor por Pip</span>
+              <span class="rvalue" id="calc-pip-value">—</span>
+            </div>
+            <div class="calc-result-row">
+              <span class="rlabel">Risco Real</span>
+              <span class="rvalue" id="calc-real-risk">—</span>
+            </div>
+          </div>
+          <div id="calc-rr-section" style="display:none">
+            <div class="calc-divider"></div>
+            <div class="calc-rr-row">
+              <div class="calc-rr-item">
+                <div class="rrlabel">Dist. TP</div>
+                <div class="rrvalue" id="calc-tp-dist">—</div>
+              </div>
+              <div class="calc-rr-item">
+                <div class="rrlabel">R:R</div>
+                <div class="rrvalue" id="calc-rr-val" style="color:var(--green)">—</div>
+              </div>
+              <div class="calc-rr-item">
+                <div class="rrlabel">Ganho Potencial</div>
+                <div class="rrvalue" id="calc-tp-gain" style="color:var(--green)">—</div>
+              </div>
+            </div>
+          </div>
+          <button class="calc-copy-btn" onclick="copyCalcResult()">📋 Copiar Resultado</button>
+        </div>
+      </div><!-- /calc-result-card -->
+    </div><!-- /calc-grid -->
+  </div><!-- /tab-calculadora -->
 </div>
 
 <!-- MODAL EDIÇÃO -->
@@ -843,13 +1088,14 @@ function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('btn-' + name).classList.add('active');
-  // Re-render charts when switching to principal (canvas needs visible container)
   if (name === 'principal') {
     setTimeout(() => {
       renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart();
     }, 50);
   }
-  // Remember last tab
+  if (name === 'calculadora') {
+    setTimeout(() => calcPosition(), 50);
+  }
   try { localStorage.setItem('td_active_tab', name); } catch(e){}
 }
 
@@ -1673,6 +1919,453 @@ async function confirmImport(){
   impRows=[];
   showToast(ok+' trade'+(ok!==1?'s':'')+' importado'+(ok!==1?'s':'')+(fail>0?' ('+fail+' erro'+(fail!==1?'s':'')+')':'')+' ✓');
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   CALCULADORA DE POSIÇÃO — v3 (motor dinâmico por ativo)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Registro de ativos Forex ───────────────────────────────── */
+const CALC_FOREX_CFG = {
+  'EURUSD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'GBPUSD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'AUDUSD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'NZDUSD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'USDCAD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'USDCHF':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'USDJPY':{ stopLabel:'Pips',   pipValUSD:9.09,  minLot:0.01, lotStep:0.01 },
+  'EURJPY':{ stopLabel:'Pips',   pipValUSD:9.09,  minLot:0.01, lotStep:0.01 },
+  'GBPJPY':{ stopLabel:'Pips',   pipValUSD:9.09,  minLot:0.01, lotStep:0.01 },
+  'CADJPY':{ stopLabel:'Pips',   pipValUSD:9.09,  minLot:0.01, lotStep:0.01 },
+  'AUDJPY':{ stopLabel:'Pips',   pipValUSD:9.09,  minLot:0.01, lotStep:0.01 },
+  'CHFJPY':{ stopLabel:'Pips',   pipValUSD:9.09,  minLot:0.01, lotStep:0.01 },
+  'EURGBP':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'EURAUD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'EURCAD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'GBPAUD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'GBPCAD':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'GBPCHF':{ stopLabel:'Pips',   pipValUSD:10,    minLot:0.01, lotStep:0.01 },
+  'XAUUSD':{ stopLabel:'Pontos', pipValUSD:1,     minLot:0.01, lotStep:0.01 },
+  'XAGUSD':{ stopLabel:'Pontos', pipValUSD:5,     minLot:0.01, lotStep:0.01 },
+  'NAS100':{ stopLabel:'Pontos', pipValUSD:1,     minLot:0.1,  lotStep:0.1  },
+  'US30'  :{ stopLabel:'Pontos', pipValUSD:1,     minLot:0.1,  lotStep:0.1  },
+  'US500' :{ stopLabel:'Pontos', pipValUSD:0.5,   minLot:0.1,  lotStep:0.1  },
+};
+const CALC_FOREX_DEFAULT = { stopLabel:'Pips', pipValUSD:10, minLot:0.01, lotStep:0.01 };
+
+/* ── Registro de Futuros B3 (detecção por prefixo) ──────────── */
+const CALC_BR_FUTURES = {
+  'WIN':{ name:'Mini Índice (WIN)', stopLabel:'Pontos', pointValBRL:0.20, minContracts:1 },
+  'WDO':{ name:'Mini Dólar (WDO)', stopLabel:'Pontos', pointValBRL:10,   minContracts:1 },
+  'IND':{ name:'Ibovespa Cheio',   stopLabel:'Pontos', pointValBRL:1,    minContracts:1 },
+  'DOL':{ name:'Dólar Cheio',      stopLabel:'Pontos', pointValBRL:50,   minContracts:1 },
+  'BGI':{ name:'Boi Gordo (BGI)',  stopLabel:'Pontos', pointValBRL:3,    minContracts:1 },
+  'CCM':{ name:'Milho (CCM)',      stopLabel:'Pontos', pointValBRL:1,    minContracts:1 },
+};
+
+/* ── Helpers de configuração ────────────────────────────────── */
+function getForexCfg(pair) {
+  return CALC_FOREX_CFG[(pair||'').toUpperCase()] || CALC_FOREX_DEFAULT;
+}
+
+function getBRCfg(assetStr) {
+  const up = (assetStr||'').toUpperCase().trim();
+  for (const prefix of Object.keys(CALC_BR_FUTURES)) {
+    if (up.startsWith(prefix)) return { type:'futures', cfg:CALC_BR_FUTURES[prefix], prefix };
+  }
+  return { type:'stocks', cfg:null };
+}
+
+/* ── Reatividade: par Forex mudou ───────────────────────────── */
+function onForexPairChange() {
+  const pair   = document.getElementById('calc-forex-pair')?.value || 'EURUSD';
+  const cfg    = getForexCfg(pair);
+  const lbl    = cfg.stopLabel;
+  const plh    = lbl === 'Pips' ? 'ex: 20' : 'ex: 50';
+  const stopEl = document.getElementById('calc-pips');
+  const lbEl   = document.getElementById('calc-pips-label');
+  const tpEl   = document.getElementById('calc-tp-label');
+  if (lbEl)   lbEl.textContent  = `Stop em ${lbl}`;
+  if (tpEl)   tpEl.textContent  = `Alvo em ${lbl}`;
+  if (stopEl) stopEl.placeholder = plh;
+}
+
+/* ── Reatividade: ativo BR mudou ────────────────────────────── */
+function onBRAssetChange() {
+  const asset  = document.getElementById('calc-br-asset')?.value || '';
+  const br     = getBRCfg(asset);
+  const info   = document.getElementById('calc-br-asset-info');
+  const stopEl = document.getElementById('calc-pips');
+  const lbEl   = document.getElementById('calc-pips-label');
+  const tpEl   = document.getElementById('calc-tp-label');
+
+  if (br.type === 'futures' && br.cfg) {
+    const { name, stopLabel, pointValBRL } = br.cfg;
+    if (info) {
+      info.textContent = `${name} · R$${pointValBRL.toFixed(2)}/ponto/contrato`;
+      info.classList.add('visible');
+    }
+    if (lbEl)   lbEl.textContent   = `Stop em ${stopLabel}`;
+    if (tpEl)   tpEl.textContent   = `Alvo em ${stopLabel}`;
+    if (stopEl) stopEl.placeholder = 'ex: 200';
+  } else {
+    if (info) { info.textContent = ''; info.classList.remove('visible'); }
+    if (lbEl)   lbEl.textContent   = 'Stop (R$ por ação)';
+    if (tpEl)   tpEl.textContent   = 'Alvo (R$ por ação)';
+    if (stopEl) stopEl.placeholder = 'ex: 0.50';
+  }
+}
+
+/* ── Sistema de warning ─────────────────────────────────────── */
+function showCalcWarn(body, suggest) {
+  const warnEl    = document.getElementById('calc-min-warn');
+  const bodyEl    = document.getElementById('calc-warn-body');
+  const suggestEl = document.getElementById('calc-warn-suggest');
+  const emptyEl   = document.getElementById('calc-empty');
+  const contentEl = document.getElementById('calc-result-content');
+  if (warnEl)    warnEl.style.display    = '';
+  if (bodyEl)    bodyEl.textContent      = body;
+  if (suggestEl) suggestEl.innerHTML     = suggest;
+  if (emptyEl)   emptyEl.style.display   = 'none';
+  if (contentEl) contentEl.style.display = 'none';
+}
+function hideCalcWarn() {
+  const el = document.getElementById('calc-min-warn');
+  if (el) el.style.display = 'none';
+}
+
+/* ── Engine: Forex / Metais / Índices CFD ───────────────────── */
+function calcForex(riskInput, stop, pair, acct, usdBRL, tp) {
+  const cfg         = getForexCfg(pair);
+  const riskUSD     = acct === 'BRL' ? riskInput / usdBRL : riskInput;
+  const { pipValUSD, minLot, lotStep, stopLabel } = cfg;
+  const cur         = acct === 'BRL' ? 'R$' : '$';
+
+  const lotsRaw     = riskUSD / (stop * pipValUSD);
+  const lotsRounded = Math.floor(lotsRaw / lotStep) * lotStep;
+
+  if (lotsRaw < minLot) {
+    const minRiskUSD = minLot * stop * pipValUSD;
+    const minDisplay = acct === 'BRL'
+      ? `R$${(minRiskUSD * usdBRL).toFixed(2)} (~$${minRiskUSD.toFixed(2)})`
+      : `$${minRiskUSD.toFixed(2)}`;
+    return {
+      error:   true,
+      body:    `O risco inserido é inferior ao lote mínimo permitido para este ativo (mínimo: ${minLot} lote).`,
+      suggest: `Com <strong>${stop} ${stopLabel.toLowerCase()}</strong> de stop, o risco mínimo para operar <strong>${minLot} lote</strong> de ${pair} é de <strong>${minDisplay}</strong>.`,
+    };
+  }
+
+  const realRiskUSD   = lotsRounded * stop * pipValUSD;
+  const realRisk      = acct === 'BRL'
+    ? `R$${(realRiskUSD * usdBRL).toFixed(2)} (~$${realRiskUSD.toFixed(2)})`
+    : `$${realRiskUSD.toFixed(2)}`;
+  const pipValDisplay = (pipValUSD * (acct === 'BRL' ? usdBRL : 1)).toFixed(2);
+
+  let rrData = null;
+  if (tp > 0) {
+    const rr   = tp / stop;
+    const gain = lotsRounded * tp * pipValUSD * (acct === 'BRL' ? usdBRL : 1);
+    rrData = { tpDist:`${tp.toFixed(1)} ${stopLabel}`, rr:rr.toFixed(2), gain, cur };
+  }
+
+  const copyRisk = acct === 'BRL'
+    ? `R$${(realRiskUSD * usdBRL).toFixed(2)}`
+    : `$${realRiskUSD.toFixed(2)}`;
+  const decimals = lotStep < 0.1 ? 2 : 1;
+
+  return {
+    mainValue:   lotsRounded.toFixed(decimals),
+    mainUnit:    'lotes',
+    mainLabel:   'Lote Ideal',
+    mainSub:     `Stop: ${stop.toFixed(1)} ${stopLabel} · mín. ${minLot} lote`,
+    stopDist:    `${stop.toFixed(1)} ${stopLabel}`,
+    pipRowLabel: `Valor por ${stopLabel === 'Pips' ? 'Pip' : 'Ponto'}`,
+    pipValue:    `${cur}${pipValDisplay} / ${stopLabel === 'Pips' ? 'pip' : 'ponto'} / lote`,
+    realRisk,
+    copyText:    `Lote: ${lotsRounded.toFixed(decimals)} | Stop: ${stop.toFixed(1)} ${stopLabel} | Risco: ${copyRisk}`,
+    rr:          rrData,
+    showPip:     true,
+  };
+}
+
+/* ── Engine: Futuros B3 (WIN, WDO, IND, DOL…) ──────────────── */
+function calcBRFutures(riskBRL, stopPts, tpPts, cfg) {
+  const { name, pointValBRL, minContracts } = cfg;
+  const contracts = Math.floor(riskBRL / (stopPts * pointValBRL));
+
+  if (contracts < minContracts) {
+    const minRisk = minContracts * stopPts * pointValBRL;
+    return {
+      error:   true,
+      body:    `O risco inserido é inferior ao mínimo para ${name} (mínimo: ${minContracts} contrato).`,
+      suggest: `Com <strong>${stopPts} pontos</strong> de stop, o risco mínimo para <strong>${minContracts} contrato</strong> é de <strong>R$${minRisk.toFixed(2)}</strong>.`,
+    };
+  }
+
+  const realRisk = contracts * stopPts * pointValBRL;
+  let rrData = null;
+  if (tpPts > 0) {
+    const rr   = tpPts / stopPts;
+    const gain = contracts * tpPts * pointValBRL;
+    rrData = { tpDist:`${tpPts.toFixed(1)} pontos`, rr:rr.toFixed(2), gain, cur:'R$' };
+  }
+
+  return {
+    mainValue:   contracts.toString(),
+    mainUnit:    'contratos',
+    mainLabel:   `Contratos — ${name}`,
+    mainSub:     `Stop: ${stopPts} pts · R$${pointValBRL.toFixed(2)}/pt/contrato`,
+    stopDist:    `${stopPts.toFixed(1)} pontos`,
+    pipRowLabel: 'Valor por Ponto',
+    pipValue:    `R$${pointValBRL.toFixed(2)} / ponto / contrato`,
+    realRisk:    `R$${realRisk.toFixed(2)}`,
+    copyText:    `Contratos: ${contracts} (${name}) | Stop: ${stopPts} pts | Risco: R$${realRisk.toFixed(2)}`,
+    rr:          rrData,
+    showPip:     true,
+  };
+}
+
+/* ── Engine: Ações BR ───────────────────────────────────────── */
+function calcBRStocks(riskBRL, stopReais, tpReais, asset) {
+  const qty = Math.floor(riskBRL / stopReais);
+
+  if (qty < 1) {
+    return {
+      error:   true,
+      body:    `O risco inserido é inferior ao mínimo para operar 1 ação${asset ? ' de ' + asset.toUpperCase() : ''}.`,
+      suggest: `Com <strong>R$${stopReais.toFixed(2)} por ação</strong> de stop, o risco mínimo para <strong>1 ação</strong> é de <strong>R$${stopReais.toFixed(2)}</strong>.`,
+    };
+  }
+
+  const realRisk = qty * stopReais;
+  let rrData = null;
+  if (tpReais > 0) {
+    const rr   = tpReais / stopReais;
+    const gain = qty * tpReais;
+    rrData = { tpDist:`R$${tpReais.toFixed(2)}/ação`, rr:rr.toFixed(2), gain, cur:'R$' };
+  }
+
+  return {
+    mainValue:   qty.toString(),
+    mainUnit:    'ações',
+    mainLabel:   'Quantidade de Ações',
+    mainSub:     `Stop: R$${stopReais.toFixed(2)} / ação`,
+    stopDist:    `R$${stopReais.toFixed(2)} por ação`,
+    pipRowLabel: null,
+    pipValue:    null,
+    realRisk:    `R$${realRisk.toFixed(2)}`,
+    copyText:    `Ações: ${qty}${asset?' ('+asset.toUpperCase()+')':''} | Stop: R$${stopReais.toFixed(2)} | Risco: R$${realRisk.toFixed(2)}`,
+    rr:          rrData,
+    showPip:     false,
+  };
+}
+
+/* ── Engine: Ações US ───────────────────────────────────────── */
+function calcUSStocks(riskUSD, stopUSD, tpUSD, asset) {
+  const shares = Math.floor(riskUSD / stopUSD);
+
+  if (shares < 1) {
+    return {
+      error:   true,
+      body:    `O risco inserido é inferior ao mínimo para operar 1 share${asset ? ' de ' + asset.toUpperCase() : ''}.`,
+      suggest: `Com <strong>$${stopUSD.toFixed(2)} por share</strong> de stop, o risco mínimo para <strong>1 share</strong> é de <strong>$${stopUSD.toFixed(2)}</strong>.`,
+    };
+  }
+
+  const realRisk = shares * stopUSD;
+  let rrData = null;
+  if (tpUSD > 0) {
+    const rr   = tpUSD / stopUSD;
+    const gain = shares * tpUSD;
+    rrData = { tpDist:`$${tpUSD.toFixed(2)}/share`, rr:rr.toFixed(2), gain, cur:'$' };
+  }
+
+  return {
+    mainValue:   shares.toString(),
+    mainUnit:    'shares',
+    mainLabel:   'Quantidade de Shares',
+    mainSub:     `Stop: $${stopUSD.toFixed(2)} / share`,
+    stopDist:    `$${stopUSD.toFixed(2)} por share`,
+    pipRowLabel: null,
+    pipValue:    null,
+    realRisk:    `$${realRisk.toFixed(2)}`,
+    copyText:    `Shares: ${shares}${asset?' ('+asset.toUpperCase()+')':''} | Stop: $${stopUSD.toFixed(2)} | Risco: $${realRisk.toFixed(2)}`,
+    rr:          rrData,
+    showPip:     false,
+  };
+}
+
+/* ── Estado e inicialização ─────────────────────────────────── */
+let calcMarket    = localStorage.getItem('calc_market') || 'forex';
+let _calcLastCopy = '';
+
+document.addEventListener('DOMContentLoaded', () => {
+  setCalcMarket(calcMarket, false);
+  const savedRate = localStorage.getItem('calc_brl_rate');
+  if (savedRate) {
+    const el = document.getElementById('calc-forex-brl-rate');
+    if (el) el.value = savedRate;
+  }
+  const rateEl = document.getElementById('calc-forex-brl-rate');
+  if (rateEl) rateEl.addEventListener('input', () => {
+    localStorage.setItem('calc_brl_rate', rateEl.value);
+  });
+});
+
+function setCalcMarket(mkt, save=true) {
+  calcMarket = mkt;
+  if (save) localStorage.setItem('calc_market', mkt);
+
+  document.getElementById('calc-forex-fields').style.display = mkt==='forex' ? '' : 'none';
+  document.getElementById('calc-br-fields').style.display    = mkt==='br'    ? '' : 'none';
+  document.getElementById('calc-us-fields').style.display    = mkt==='us'    ? '' : 'none';
+
+  const isBR = mkt === 'br';
+  document.getElementById('calc-risk-label').textContent  = isBR ? 'Risco (R$)' : 'Risco ($)';
+  document.getElementById('calc-risk-symbol').textContent = isBR ? 'R$'         : '$';
+
+  if (mkt === 'forex') {
+    onForexPairChange();
+  } else if (isBR) {
+    onBRAssetChange();
+  } else {
+    const lbEl = document.getElementById('calc-pips-label');
+    const tpEl = document.getElementById('calc-tp-label');
+    const stEl = document.getElementById('calc-pips');
+    if (lbEl) lbEl.textContent  = 'Stop ($ por share)';
+    if (tpEl) tpEl.textContent  = 'Alvo ($ por share)';
+    if (stEl) stEl.placeholder  = 'ex: 1.50';
+  }
+
+  document.querySelectorAll('.calc-mkt-btn').forEach(b => {
+    b.classList.remove('active');
+    if (b.dataset.mkt === mkt) b.classList.add('active');
+  });
+
+  hideCalcWarn();
+  calcPosition();
+}
+
+function toggleBRLRate() {
+  const acct = document.getElementById('calc-forex-acct')?.value;
+  const wrap  = document.getElementById('calc-brl-rate-wrap');
+  if (wrap) wrap.style.display = acct === 'BRL' ? '' : 'none';
+}
+
+function toggleCalcTP() {
+  const wrap  = document.getElementById('calc-tp-wrap');
+  const arrow = document.getElementById('calc-tp-arrow');
+  const open  = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : '';
+  arrow.textContent  = open ? '▶' : '▼';
+  if (open) {
+    const tp = document.getElementById('calc-tp-pips');
+    if (tp) tp.value = '';
+    calcPosition();
+  }
+}
+
+/* ── Dispatcher principal ───────────────────────────────────── */
+function calcPosition() {
+  const risk = parseFloat(document.getElementById('calc-risk')?.value);
+  const stop = parseFloat(document.getElementById('calc-pips')?.value);
+  const tp   = parseFloat(document.getElementById('calc-tp-pips')?.value) || 0;
+
+  const emptyEl   = document.getElementById('calc-empty');
+  const contentEl = document.getElementById('calc-result-content');
+
+  if (!risk || !stop || risk <= 0 || stop <= 0 || isNaN(risk) || isNaN(stop)) {
+    hideCalcWarn();
+    if (emptyEl)   emptyEl.style.display   = '';
+    if (contentEl) contentEl.style.display = 'none';
+    _calcLastCopy = '';
+    return;
+  }
+
+  let result;
+  if (calcMarket === 'forex') {
+    const pair   = document.getElementById('calc-forex-pair')?.value || 'EURUSD';
+    const acct   = document.getElementById('calc-forex-acct')?.value || 'USD';
+    const usdBRL = parseFloat(document.getElementById('calc-forex-brl-rate')?.value) || 5.70;
+    result = calcForex(risk, stop, pair, acct, usdBRL, tp);
+  } else if (calcMarket === 'br') {
+    const asset = document.getElementById('calc-br-asset')?.value || '';
+    const br    = getBRCfg(asset);
+    result = br.type === 'futures'
+      ? calcBRFutures(risk, stop, tp, br.cfg)
+      : calcBRStocks(risk, stop, tp, asset);
+  } else {
+    const asset = document.getElementById('calc-us-asset')?.value || '';
+    result = calcUSStocks(risk, stop, tp, asset);
+  }
+
+  if (result.error) {
+    showCalcWarn(result.body, result.suggest);
+    _calcLastCopy = '';
+    return;
+  }
+
+  hideCalcWarn();
+  if (emptyEl)   emptyEl.style.display   = 'none';
+  if (contentEl) contentEl.style.display = '';
+
+  set$('calc-main-label', result.mainLabel);
+  set$('calc-main-value', result.mainValue);
+  set$('calc-main-unit',  result.mainUnit);
+  set$('calc-main-sub',   result.mainSub);
+  set$('calc-stop-dist',  result.stopDist);
+  set$('calc-real-risk',  result.realRisk);
+
+  const pipRow = document.getElementById('calc-pip-row');
+  if (pipRow) pipRow.style.display = result.showPip ? '' : 'none';
+  if (result.showPip) {
+    set$('calc-pip-row-label', result.pipRowLabel || 'Valor por Pip');
+    set$('calc-pip-value',     result.pipValue    || '—');
+  }
+
+  const rrSec = document.getElementById('calc-rr-section');
+  if (rrSec) {
+    if (result.rr) {
+      rrSec.style.display = '';
+      set$('calc-tp-dist', result.rr.tpDist);
+      set$('calc-rr-val',  result.rr.rr + 'R');
+      set$('calc-tp-gain', (result.rr.cur||'$') + result.rr.gain.toFixed(2));
+      const rrNum = parseFloat(result.rr.rr);
+      const rrEl  = document.getElementById('calc-rr-val');
+      if (rrEl) rrEl.style.color = rrNum >= 1.5 ? 'var(--green)' : rrNum >= 1 ? 'var(--amber)' : 'var(--red)';
+    } else {
+      rrSec.style.display = 'none';
+    }
+  }
+
+  _calcLastCopy = result.copyText + (result.rr ? ` | R:R ${result.rr.rr}R` : '');
+}
+
+function set$(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function copyCalcResult() {
+  if (!_calcLastCopy) return;
+  navigator.clipboard.writeText(_calcLastCopy).then(() => {
+    const btn = document.querySelector('.calc-copy-btn');
+    if (btn) {
+      btn.textContent = '✓ Copiado!';
+      setTimeout(() => { btn.textContent = '📋 Copiar Resultado'; }, 1800);
+    }
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = _calcLastCopy;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  });
+}
+/* ══════════════════════════════════════════════════════════════ */
 
 /* ── exclusão ─────────────────────────────────────────────── */
 async function deleteTrade(id) {
