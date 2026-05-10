@@ -895,8 +895,18 @@
             <label class="ms-item"><input type="checkbox" value="Região de demanda"><span class="ms-swatch" style="background:#155e75"></span> Região de demanda</label>
             <label class="ms-item"><input type="checkbox" value="Região de oferta"><span class="ms-swatch" style="background:#86198f"></span> Região de oferta</label>
             <label class="ms-item"><input type="checkbox" value="IFVG"><span class="ms-swatch" style="background:#14532d"></span> IFVG</label>
+            <label class="ms-item"><input type="checkbox" value="Rompimento de região"><span class="ms-swatch" style="background:#b45309"></span> Rompimento de região</label>
+            <label class="ms-item"><input type="checkbox" value="Regiões maiores"><span class="ms-swatch" style="background:#0f766e"></span> Regiões maiores</label>
           </div>
         </div>
+      </div>
+      <div class="form-group"><label>Gatilho</label>
+        <select id="e-gatilho">
+          <option value="">— Nenhum —</option>
+          <option value="POI">POI</option>
+          <option value="CHoC">CHoC</option>
+          <option value="POI.D">POI.D</option>
+        </select>
       </div>
       <div class="form-group"><label>Timeframe</label>
         <div class="ms-wrap" id="e-tf-wrap">
@@ -978,34 +988,80 @@ onValue(sRef, (snap) => {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-let trades        = [];
-let activeMarket  = 'todos';
-let lastN         = 0; // 0 = no limit
-let activeMonth   = 'todos'; // 'todos' | 'dia' | 'semana' | 'ano' | 'YYYY-MM'
-let charts        = {};
+let trades         = [];
+let charts         = {};
 let initialBalance = 0;
 
-/* ── filtro últimas N operações ───────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   SINGLE SOURCE OF TRUTH — Global Filters
+   Toda lógica de filtragem passa por aqui. Nunca use estados
+   separados por aba; altere globalFilters e chame syncFilterUI().
+   ══════════════════════════════════════════════════════════════ */
+const globalFilters = {
+  strategy : '',        // '' = todas as estratégias
+  market   : 'todos',   // 'todos' | 'Forex' | 'Crypto' | 'B3 Futuros' | 'Ações B3'
+  period   : 'todos',   // 'todos' | 'dia' | 'ontem' | 'semana' | 'ano' | 'YYYY-MM' | 'custom'
+  dateFrom : '',        // range customizado (tem precedência sobre period quando preenchido)
+  dateTo   : '',
+  lastN    : 0          // 0 = sem limite
+};
+
+/* ── applyLastN (interno) ─────────────────────────────────── */
+function applyLastN(data) {
+  const n = globalFilters.lastN;
+  if (!n || n >= data.length) return data;
+  return data.slice(0, n);
+}
+
+/* ── setLastN — chamado pelo input lastn-input ────────────── */
 function setLastN(val) {
-  const n = parseInt(val);
-  lastN = (n > 0) ? n : 0;
+  globalFilters.lastN = parseInt(val) > 0 ? parseInt(val) : 0;
+  syncFilterUI();
   renderAll();
 }
 
-function applyLastN(data) {
-  // data should already be sorted newest-first before calling this
-  if (!lastN || lastN >= data.length) return data;
-  return data.slice(0, lastN);
+/* ── syncFilterUI — mantém todos os inputs/chips sincronizados */
+function syncFilterUI() {
+  const { market, period, dateFrom, dateTo, lastN, strategy } = globalFilters;
+
+  // Chips de mercado (Aba Principal)
+  document.querySelectorAll('[data-market]').forEach(c =>
+    c.classList.toggle('active', c.dataset.market === market)
+  );
+
+  // Select de mercado (Aba Operações)
+  const opMkt = document.getElementById('op-market');
+  if (opMkt) opMkt.value = market === 'todos' ? '' : market;
+
+  // Chips de período (Aba Principal)
+  document.querySelectorAll('[data-month]').forEach(c =>
+    c.classList.toggle('active', c.dataset.month === period)
+  );
+
+  // Inputs de data (Aba Operações)
+  const dfEl = document.getElementById('op-date-from');
+  const dtEl = document.getElementById('op-date-to');
+  if (dfEl) dfEl.value = dateFrom;
+  if (dtEl) dtEl.value = dateTo;
+
+  // Input últimas N (Aba Principal)
+  const lnEl = document.getElementById('lastn-input');
+  if (lnEl && document.activeElement !== lnEl) lnEl.value = lastN || '';
+
+  // Select de estratégia (Aba Operações)
+  const stEl = document.getElementById('op-strategy');
+  if (stEl) stEl.value = strategy;
 }
 
-/* ── filtros da aba operações ─────────────────────────────── */
-const opFilters = { strategy:'', market:'', dateFrom:'', dateTo:'' };
-
+/* ── Aba Operações: handlers dos filtros ──────────────────── */
 function updateOpStrategyList() {
   const sel = document.getElementById('op-strategy');
   if (!sel) return;
   const current = sel.value;
-  const strats = new Set();
+  const FIXED = ['Liquidez','POI','Wyckoff','SMS','CHoC','Inversão de fluxo','Divergência RSI',
+                 'Troca de polaridade','Região de demanda','Região de oferta','IFVG',
+                 'Rompimento de região','Regiões maiores'];
+  const strats = new Set(FIXED);
   trades.forEach(t => {
     const arr = Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []);
     arr.forEach(s => s && strats.add(s));
@@ -1015,72 +1071,73 @@ function updateOpStrategyList() {
     sorted.map(s => `<option value="${s}" ${s===current?'selected':''}>${s}</option>`).join('');
 }
 
+function applyOpFilters(resetShortcut = true) {
+  if (resetShortcut) {
+    document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
+  }
+  globalFilters.strategy = document.getElementById('op-strategy')?.value  || '';
+  const mktVal           = document.getElementById('op-market')?.value    || '';
+  globalFilters.market   = mktVal || 'todos';
+  globalFilters.dateFrom = document.getElementById('op-date-from')?.value || '';
+  globalFilters.dateTo   = document.getElementById('op-date-to')?.value   || '';
+  // Range manual → desativa chip de período
+  if (globalFilters.dateFrom || globalFilters.dateTo) {
+    globalFilters.period = 'custom';
+  }
+  syncFilterUI();
+  renderAll();
+}
+
+function clearOpFilters() {
+  globalFilters.strategy = '';
+  globalFilters.market   = 'todos';
+  globalFilters.dateFrom = '';
+  globalFilters.dateTo   = '';
+  globalFilters.period   = 'todos';
+  globalFilters.lastN    = 0;
+  document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
+  syncFilterUI();
+  renderAll();
+}
+
 function opShortcut(key) {
   const today = new Date();
-  const pad = n => String(n).padStart(2,'0');
+  const pad = n => String(n).padStart(2, '0');
   const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 
-  // toggle: click same shortcut again → clear
+  // toggle: mesma shortcut → limpa
   const active = document.querySelector('.op-shortcut.active');
   if (active && active.dataset.sc === key) { clearOpFilters(); return; }
 
   document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
   document.querySelector(`.op-shortcut[data-sc="${key}"]`).classList.add('active');
 
-  let from='', to=iso(today);
-  if (key==='hoje') { from=iso(today); }
-  else if (key==='ontem') {
-    const y=new Date(today); y.setDate(today.getDate()-1);
-    from=iso(y); to=iso(y);
-  } else if (key==='semana') {
-    const dow=today.getDay()===0?6:today.getDay()-1;
-    const mon=new Date(today); mon.setDate(today.getDate()-dow);
-    from=iso(mon);
-  } else if (key==='mes') {
-    from=today.getFullYear()+'-'+pad(today.getMonth()+1)+'-01';
+  let from = '', to = iso(today);
+  if (key === 'hoje') {
+    from = iso(today);
+    globalFilters.period = 'dia';
+  } else if (key === 'ontem') {
+    const y = new Date(today); y.setDate(today.getDate() - 1);
+    from = iso(y); to = iso(y);
+    globalFilters.period = 'ontem';
+  } else if (key === 'semana') {
+    const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
+    const mon = new Date(today); mon.setDate(today.getDate() - dow);
+    from = iso(mon);
+    globalFilters.period = 'semana';
+  } else if (key === 'mes') {
+    from = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-01';
+    globalFilters.period = today.getFullYear() + '-' + pad(today.getMonth() + 1);
   }
 
-  document.getElementById('op-date-from').value = from;
-  document.getElementById('op-date-to').value   = to;
-  opFilters.dateFrom = from;
-  opFilters.dateTo   = to;
-  applyOpFilters(false); // false = don't reset shortcut highlight
+  globalFilters.dateFrom = from;
+  globalFilters.dateTo   = to;
+  syncFilterUI();
+  renderAll();
 }
 
-function applyOpFilters(resetShortcut=true) {
-  if (resetShortcut) {
-    document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
-  }
-  opFilters.strategy = document.getElementById('op-strategy')?.value || '';
-  opFilters.market   = document.getElementById('op-market')?.value   || '';
-  opFilters.dateFrom = document.getElementById('op-date-from')?.value || '';
-  opFilters.dateTo   = document.getElementById('op-date-to')?.value   || '';
-  renderTable();
-}
-
-function clearOpFilters() {
-  opFilters.strategy=''; opFilters.market=''; opFilters.dateFrom=''; opFilters.dateTo='';
-  document.getElementById('op-strategy').value  = '';
-  document.getElementById('op-market').value    = '';
-  document.getElementById('op-date-from').value = '';
-  document.getElementById('op-date-to').value   = '';
-  document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
-  renderTable();
-}
-
-function getOpFiltered() {
-  // Parte de getFiltered() → já aplica mercado global + período + lastN
-  return getFiltered().filter(t => {
-    if (opFilters.market   && t.market !== opFilters.market) return false;
-    if (opFilters.strategy) {
-      const arr = Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[]);
-      if (!arr.includes(opFilters.strategy)) return false;
-    }
-    if (opFilters.dateFrom && t.date < opFilters.dateFrom) return false;
-    if (opFilters.dateTo   && t.date > opFilters.dateTo)   return false;
-    return true;
-  });
-}
+// Alias mantido para compatibilidade interna — agora idêntico a getFiltered()
+function getOpFiltered() { return getFiltered(); }
 
 /* ── navegação por abas ───────────────────────────────────── */
 function switchTab(name) {
@@ -1137,29 +1194,46 @@ function showToast(msg) {
 function fmt(v)    { return (v >= 0 ? '+' : '') + '$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtAbs(v) { return '$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-/* ── filtros ──────────────────────────────────────────────── */
+/* ── filtros — Single Source of Truth ───────────────────────── */
 function getFiltered() {
+  const { strategy, market, period, dateFrom, dateTo } = globalFilters;
   const today = new Date();
-  const pad = n => String(n).padStart(2,'0');
+  const pad = n => String(n).padStart(2, '0');
   const todayStr = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
-  // Monday of current week
   const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
   const mon = new Date(today); mon.setDate(today.getDate() - dow);
-  const monStr = mon.getFullYear()+'-'+pad(mon.getMonth()+1)+'-'+pad(mon.getDate());
-  const yearStr = String(today.getFullYear());
+  const monStr   = mon.getFullYear()+'-'+pad(mon.getMonth()+1)+'-'+pad(mon.getDate());
+  const yearStr  = String(today.getFullYear());
 
   const filtered = trades.filter(t => {
-    const mOk = activeMarket === 'todos' || t.market === activeMarket;
-    let mnOk = true;
-    if      (activeMonth === 'todos')  mnOk = true;
-    else if (activeMonth === 'dia')    mnOk = t.date === todayStr;
-    else if (activeMonth === 'ontem')  { const y=new Date(today); y.setDate(today.getDate()-1); const ys=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate()); mnOk = t.date === ys; }
-    else if (activeMonth === 'semana') mnOk = t.date >= monStr && t.date <= todayStr;
-    else if (activeMonth === 'ano')    mnOk = t.date.startsWith(yearStr);
-    else                               mnOk = t.date.substring(0,7) === activeMonth;
-    return mOk && mnOk;
+    // — Mercado —
+    if (market !== 'todos' && t.market !== market) return false;
+
+    // — Estratégia —
+    if (strategy) {
+      const arr = Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []);
+      if (!arr.includes(strategy)) return false;
+    }
+
+    // — Data: range customizado tem precedência sobre chip de período —
+    if (dateFrom || dateTo) {
+      if (dateFrom && t.date < dateFrom) return false;
+      if (dateTo   && t.date > dateTo)   return false;
+    } else {
+      if      (period === 'todos' || period === 'custom') { /* sem filtro */ }
+      else if (period === 'dia')    { if (t.date !== todayStr) return false; }
+      else if (period === 'ontem')  {
+        const y = new Date(today); y.setDate(today.getDate()-1);
+        const ys = y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
+        if (t.date !== ys) return false;
+      }
+      else if (period === 'semana') { if (!(t.date >= monStr && t.date <= todayStr)) return false; }
+      else if (period === 'ano')    { if (!t.date.startsWith(yearStr)) return false; }
+      else                          { if (t.date.substring(0,7) !== period) return false; } // YYYY-MM
+    }
+    return true;
   });
-  // Sort newest-first THEN apply lastN cap (single source of truth)
+
   const sorted = [...filtered].sort((a,b) => {
     const ka = (a.date||'')+'T'+(a.time||'00:00');
     const kb = (b.date||'')+'T'+(b.time||'00:00');
@@ -1169,21 +1243,20 @@ function getFiltered() {
 }
 
 function setMarket(m) {
-  activeMarket = m;
-  document.querySelectorAll('[data-market]').forEach(c => {
-    c.classList.toggle('active', c.dataset.market === m);
-  });
+  globalFilters.market = m;
+  syncFilterUI();
   renderAll();
 }
 
 function setPeriod(m) {
-  activeMonth = m;
-  document.querySelectorAll('[data-month]').forEach(c => {
-    c.classList.toggle('active', c.dataset.month === m);
-  });
+  globalFilters.period   = m;
+  globalFilters.dateFrom = '';   // período chip → limpa range customizado
+  globalFilters.dateTo   = '';
+  document.querySelectorAll('.op-shortcut').forEach(s => s.classList.remove('active'));
+  syncFilterUI();
   renderAll();
 }
-// kept for backwards compat (buildMonthChips uses it)
+// mantido para retrocompat (buildMonthChips usa)
 function setMonth(m) { setPeriod(m); }
 
 function buildMonthChips() {
@@ -1193,7 +1266,7 @@ function buildMonthChips() {
   wrap.innerHTML = keys.map(k => {
     const [y, m] = k.split('-');
     const label  = MN[parseInt(m)-1] + '/' + y.slice(2);
-    const isSel  = k === activeMonth;
+    const isSel  = k === globalFilters.period;
     return `<span class="chip month ${isSel?'active':''}" data-month="${k}" onclick="setMonth('${k}')">${label}</span>`;
   }).join('');
 }
@@ -1221,18 +1294,18 @@ function saveInitialBalance(val) {
 }
 
 function getPeriodStartDate() {
-  // Returns the ISO date string (YYYY-MM-DD) of the first day of the active period,
-  // or null when activeMonth === 'todos' (no period boundary).
-  if (activeMonth === 'todos') return null;
+  const { period, dateFrom } = globalFilters;
+  // Range customizado: a data inicial já é o início do período
+  if (dateFrom) return dateFrom;
+  if (period === 'todos' || period === 'custom') return null;
   const today = new Date();
   const pad = n => String(n).padStart(2, '0');
   const iso  = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-  if (activeMonth === 'dia')    return iso(today);
-  if (activeMonth === 'ontem')  { const d=new Date(today); d.setDate(d.getDate()-1); return iso(d); }
-  if (activeMonth === 'semana') { const d=new Date(today); const dow=d.getDay()===0?6:d.getDay()-1; d.setDate(d.getDate()-dow); return iso(d); }
-  if (activeMonth === 'ano')    return today.getFullYear()+'-01-01';
-  // YYYY-MM chip
-  if (/^\d{4}-\d{2}$/.test(activeMonth)) return activeMonth+'-01';
+  if (period === 'dia')    return iso(today);
+  if (period === 'ontem')  { const d=new Date(today); d.setDate(d.getDate()-1); return iso(d); }
+  if (period === 'semana') { const d=new Date(today); const dow=d.getDay()===0?6:d.getDay()-1; d.setDate(d.getDate()-dow); return iso(d); }
+  if (period === 'ano')    return today.getFullYear()+'-01-01';
+  if (/^\d{4}-\d{2}$/.test(period)) return period+'-01';
   return null;
 }
 
@@ -1242,14 +1315,14 @@ function renderKPIs() {
   // ── Balance banner ──────────────────────────────────────────
   const hasBalance   = initialBalance > 0;
   const periodStart  = getPeriodStartDate();
-  const isTodos      = activeMonth === 'todos';
+  const isTodos      = globalFilters.period === 'todos' && !globalFilters.dateFrom;
 
   // For non-"todos" periods: saldo inicial = initialBalance + trades before period start
   let balanceAtStart = initialBalance;
   if (!isTodos && periodStart) {
     const beforePeriod = trades.filter(t =>
       t.date < periodStart &&
-      (activeMarket === 'todos' || t.market === activeMarket)
+      (globalFilters.market === 'todos' || t.market === globalFilters.market)
     );
     balanceAtStart = initialBalance + beforePeriod.reduce((s, t) => s + t.result, 0);
   }
@@ -1287,7 +1360,7 @@ function renderKPIs() {
   document.getElementById('kpi-drawdown-sub').textContent= 'Maior recuo do pico';
   document.getElementById('kpi-total').textContent       = k.total;
   document.getElementById('kpi-total').className         = 'kpi-value';
-  const lastnLabel = lastN && lastN < trades.length ? ' (últimas '+lastN+')' : '';
+  const lastnLabel = globalFilters.lastN && globalFilters.lastN < trades.length ? ' (últimas '+globalFilters.lastN+')' : '';
   document.getElementById('kpi-total-sub').textContent   = trades.length!==k.total ? 'de '+trades.length+' totais'+lastnLabel : 'operações registradas';
 }
 
@@ -1459,6 +1532,7 @@ function renderTable() {
       <td><span class="badge badge-${(t.dir||'').toLowerCase()}">${t.dir||'—'}</span></td>
       <td style="font-weight:500;color:${t.result>=0?'var(--green)':'var(--red)'}">${fmt(t.result)}</td>
       <td>${(Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[])).map(colorCtag).join('')||'<span style="color:var(--muted)">—</span>'}</td>
+      <td>${t.gatilho ? `<span class="ctag" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border)">${t.gatilho}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td>${(Array.isArray(t.tf)?t.tf:(t.tf?[t.tf]:[])).map(colorCtag).join('')||'<span style="color:var(--muted)">—</span>'}</td>
       <td style="color:var(--muted)">${t.notes||'—'}</td>
       <td>
@@ -1469,7 +1543,7 @@ function renderTable() {
   document.getElementById('tableBody').innerHTML =
     `<table><thead><tr>
       <th>Data</th><th>Mercado</th><th>Ativo</th><th>Direção</th>
-      <th>Resultado</th><th>Estratégia</th><th>TF</th><th>Obs.</th><th></th>
+      <th>Resultado</th><th>Estratégia</th><th>Gatilho</th><th>TF</th><th>Obs.</th><th></th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -1490,6 +1564,7 @@ function toggleForm() {
   document.getElementById('f-asset').value = '';
   document.getElementById('f-result').value= '';
   document.getElementById('f-notes').value = '';
+  document.getElementById('f-gatilho').value = '';
   msReset('f-strategy');
   msReset('f-tf');
   dlg.classList.add('open');
@@ -1531,11 +1606,12 @@ async function addTrade() {
   const dir      = document.getElementById('f-dir').value;
   const result   = parseFloat(document.getElementById('f-result').value);
   const strategy = msGet('f-strategy');
+  const gatilho  = document.getElementById('f-gatilho').value;
   const tf       = msGet('f-tf');
   const notes    = document.getElementById('f-notes').value.trim();
   if (!date || !asset || isNaN(result)) { alert('Preencha Data, Ativo e Resultado.'); return; }
   try {
-    await window._fbPush({ date, time, market, asset, dir, result, strategy, tf, notes });
+    await window._fbPush({ date, time, market, asset, dir, result, strategy, gatilho, tf, notes });
     closeNewTradeDialog();
     showToast('Operação registrada!');
   } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
@@ -1553,6 +1629,7 @@ function openEdit(id) {
   document.getElementById('e-result').value = t.result;
   document.getElementById('e-time').value   = t.time || '';
   document.getElementById('e-notes').value  = t.notes || '';
+  document.getElementById('e-gatilho').value = t.gatilho || '';
   msSet('e-strategy', Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []));
   msSet('e-tf',       Array.isArray(t.tf)       ? t.tf       : (t.tf       ? [t.tf]       : []));
   document.getElementById('editModal').style.display = 'flex';
@@ -1571,11 +1648,12 @@ async function saveTrade() {
   const result   = parseFloat(document.getElementById('e-result').value);
   const time     = document.getElementById('e-time').value || '';
   const strategy = msGet('e-strategy');
+  const gatilho  = document.getElementById('e-gatilho').value;
   const tf       = msGet('e-tf');
   const notes    = document.getElementById('e-notes').value.trim();
   if (!date || !asset || isNaN(result)) { alert('Preencha Data, Ativo e Resultado.'); return; }
   try {
-    await window._fbUpdate(id, { date, time, market, asset, dir, result, strategy, tf, notes });
+    await window._fbUpdate(id, { date, time, market, asset, dir, result, strategy, gatilho, tf, notes });
     document.getElementById('editModal').style.display = 'none';
     showToast('Operação atualizada!');
   } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
@@ -1595,6 +1673,8 @@ const COLOR_MAP = {
   'Região de demanda':   { bg:'#cffafe', text:'#155e75', border:'#67e8f9' },
   'Região de oferta':    { bg:'#fdf2f8', text:'#86198f', border:'#e879f9' },
   'IFVG':                { bg:'#f0fdf4', text:'#14532d', border:'#4ade80' },
+  'Rompimento de região':{ bg:'#fef9c3', text:'#b45309', border:'#fde68a' },
+  'Regiões maiores':     { bg:'#ccfbf1', text:'#0f766e', border:'#5eead4' },
   // Timeframes
   '1m':  { bg:'#e0f2fe', text:'#0369a1', border:'#7dd3fc' },
   '2m':  { bg:'#ede9fe', text:'#5b21b6', border:'#a78bfa' },
@@ -1911,7 +1991,7 @@ async function confirmImport(){
   for (const r of sel){
     try {
       await window._fbPush({date:r.date,time:r.time||'',market:r.market,asset:r.symbol,
-        dir:r.dir,result:r.pnl,strategy:[],tf:[],notes:'Importado via Bybit CSV'});
+        dir:r.dir,result:r.pnl,strategy:[],gatilho:'',tf:[],notes:'Importado via Bybit CSV'});
       ok++;
     } catch(err){fail++;}
   }
@@ -2438,8 +2518,18 @@ async function deleteTrade(id) {
             <label class="ms-item"><input type="checkbox" value="Região de demanda"><span class="ms-swatch" style="background:#155e75"></span> Região de demanda</label>
             <label class="ms-item"><input type="checkbox" value="Região de oferta"><span class="ms-swatch" style="background:#86198f"></span> Região de oferta</label>
             <label class="ms-item"><input type="checkbox" value="IFVG"><span class="ms-swatch" style="background:#14532d"></span> IFVG</label>
+            <label class="ms-item"><input type="checkbox" value="Rompimento de região"><span class="ms-swatch" style="background:#b45309"></span> Rompimento de região</label>
+            <label class="ms-item"><input type="checkbox" value="Regiões maiores"><span class="ms-swatch" style="background:#0f766e"></span> Regiões maiores</label>
           </div>
         </div>
+      </div>
+      <div class="form-group"><label>Gatilho</label>
+        <select id="f-gatilho">
+          <option value="">— Nenhum —</option>
+          <option value="POI">POI</option>
+          <option value="CHoC">CHoC</option>
+          <option value="POI.D">POI.D</option>
+        </select>
       </div>
       <div class="form-group"><label>Timeframe</label>
         <div class="ms-wrap" id="f-tf-wrap">
