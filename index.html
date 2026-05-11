@@ -1767,11 +1767,11 @@ function renderEquityChart() {
   const d = getFiltered().sort((a,b) => a.date.localeCompare(b.date));
   let acc=0;
   const vals = d.map(t => { acc += t.result; return parseFloat(acc.toFixed(2)); });
-  const color = '#63b3ed';
+  const color = (vals[vals.length-1]||0) >= 0 ? '#3b6d11' : '#a32d2d';
   if (charts.equity) charts.equity.destroy();
   charts.equity = new Chart(document.getElementById('equityChart'), {
     type:'line',
-    data:{labels:['Início',...d.map((_,i)=>'#'+(i+1))],datasets:[{data:[0,...vals],borderColor:color,backgroundColor:'rgba(99,179,237,0.1)',borderWidth:2,pointRadius:vals.length>30?0:3,pointHoverRadius:5,fill:true,tension:.3}]},
+    data:{labels:['Início',...d.map((_,i)=>'#'+(i+1))],datasets:[{data:[0,...vals],borderColor:color,backgroundColor:color+'18',borderWidth:2,pointRadius:vals.length>30?0:3,pointHoverRadius:5,fill:true,tension:.3}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' $ '+c.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2})}}},
       scales:{x:{grid:{display:false},ticks:{color:'#888780',font:{size:11},autoSkip:true,maxTicksLimit:10}},
@@ -1783,12 +1783,12 @@ function renderWinLossChart() {
   const d = getFiltered();
   const wins = d.filter(t=>t.result>0).length, losses = d.length-wins;
   document.getElementById('legend-wl').innerHTML =
-    `<span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Ganhos (${wins})</span>
-     <span class="legend-item"><span class="legend-dot" style="background:#1e3a5f"></span>Perdas (${losses})</span>`;
+    `<span class="legend-item"><span class="legend-dot" style="background:#3b6d11"></span>Ganhos (${wins})</span>
+     <span class="legend-item"><span class="legend-dot" style="background:#a32d2d"></span>Perdas (${losses})</span>`;
   if (charts.wl) charts.wl.destroy();
   charts.wl = new Chart(document.getElementById('winlossChart'), {
     type:'doughnut',
-    data:{labels:['Ganhos','Perdas'],datasets:[{data:[wins||.001,losses||.001],backgroundColor:['#3b82f6','#1e3a5f'],borderWidth:0,hoverOffset:4}]},
+    data:{labels:['Ganhos','Perdas'],datasets:[{data:[wins||.001,losses||.001],backgroundColor:['#3b6d11','#a32d2d'],borderWidth:0,hoverOffset:4}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw}}}}
   });
@@ -1824,8 +1824,8 @@ function renderStratChart() {
   const sorted  = Object.entries(totals).sort((a,b) => b[1] - a[1]);
   const labels  = sorted.map(([k]) => k);
   const values  = sorted.map(([,v]) => parseFloat(v.toFixed(2)));
-  const bgColors = values.map(v => v >= 0 ? 'rgba(37,99,235,0.45)' : 'rgba(15,23,42,0.75)');
-  const bdColors = values.map(v => v >= 0 ? '#60a5fa'              : '#334155');
+  const bgColors = values.map(v => v >= 0 ? '#3b6d1188' : '#a32d2d88');
+  const bdColors = values.map(v => v >= 0 ? '#97c459'   : '#f09595');
 
   // dynamic height: min 200px, 36px per bar
   const h = Math.max(200, labels.length * 42);
@@ -1875,7 +1875,7 @@ function renderStratChart() {
 
 function renderMarketChart() {
   const markets = ['Forex','Crypto','B3 Futuros','Ações B3'];
-  const colors  = {'Forex':'#2563eb','Crypto':'#0284c7','B3 Futuros':'#0891b2','Ações B3':'#4338ca'};
+  const colors  = {'Forex':'#185fa5','Crypto':'#854f0b','B3 Futuros':'#0f6e56','Ações B3':'#534ab7'};
   const d = getFiltered();
   const vals = markets.map(m => parseFloat(d.filter(t=>t.market===m).reduce((s,t)=>s+t.result,0).toFixed(2)));
   if (charts.market) charts.market.destroy();
@@ -1900,7 +1900,7 @@ function renderMonthChart() {
   if (charts.month) charts.month.destroy();
   charts.month = new Chart(document.getElementById('monthChart'), {
     type:'bar',
-    data:{labels,datasets:[{data:vals,backgroundColor:vals.map(v=>v>=0?'rgba(37,99,235,0.55)':'rgba(15,23,42,0.75)'),borderColor:vals.map(v=>v>=0?'#60a5fa':'#334155'),borderWidth:1.5,borderRadius:4}]},
+    data:{labels,datasets:[{data:vals,backgroundColor:vals.map(v=>v>=0?'#3b6d1188':'#a32d2d88'),borderColor:vals.map(v=>v>=0?'#3b6d11':'#a32d2d'),borderWidth:1.5,borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},
       scales:{x:{grid:{display:false},ticks:{color:'#888780',font:{size:11},autoSkip:false,maxRotation:45}},
@@ -2161,10 +2161,10 @@ function _renderBlocoDetail(bi) {
   const vals   = block.map(t => { acc += t.result; return parseFloat(acc.toFixed(2)); });
   const labels = block.map((_, i) => `#${(bi-1)*DIARIO_BLOCK_SIZE + i + 1}`);
   const finalVal  = vals[vals.length - 1] || 0;
-  const colorMain = 'rgba(99,179,237,1)';
+  const colorMain = finalVal >= 0 ? 'rgba(92,184,122,1)' : 'rgba(224,112,112,1)';
   const ctx  = canvas.getContext('2d');
   const grad = ctx.createLinearGradient(0, 0, 0, 110);
-  grad.addColorStop(0, 'rgba(99,179,237,0.25)');
+  grad.addColorStop(0, finalVal >= 0 ? 'rgba(92,184,122,0.25)' : 'rgba(224,112,112,0.25)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
 
   _diarioCharts['active'] = new Chart(canvas, {
