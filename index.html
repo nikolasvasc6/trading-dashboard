@@ -251,7 +251,89 @@
   .action-btn.del:hover{color:var(--red);background:var(--red-bg);}
   .empty-state{padding:48px;text-align:center;color:var(--muted);font-size:13px;letter-spacing:.2px;}
 
-  /* ── Edit Modal ─────────────────────────────────────────── */
+  /* ── Op-Detail Modal ──────────────────────────────────────── */
+  .op-detail-overlay {
+    display: none; position: fixed; inset: 0; z-index: 900;
+    background: rgba(0,0,0,.75);
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .op-detail-overlay.open { display: flex; }
+  .op-detail-modal {
+    position: relative; z-index: 910;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--rl);
+    width: min(480px, 95vw);
+    box-shadow: var(--shadow-lg);
+    animation: dlgIn .2s cubic-bezier(.34,1.56,.64,1);
+    overflow: hidden;
+  }
+  .op-detail-stripe {
+    height: 3px; width: 100%;
+  }
+  .op-detail-stripe.take { background: linear-gradient(90deg, transparent, var(--green-dim), transparent); }
+  .op-detail-stripe.stop { background: linear-gradient(90deg, transparent, var(--red-dim),   transparent); }
+  .op-detail-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 20px 22px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .op-detail-head-left {}
+  .op-detail-num {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted); margin-bottom: 4px;
+  }
+  .op-detail-asset {
+    font-size: 22px; font-weight: 700; letter-spacing: -.5px; color: var(--text);
+  }
+  .op-detail-date {
+    font-size: 12px; color: var(--muted); margin-top: 4px;
+  }
+  .op-detail-result-col {
+    text-align: right;
+  }
+  .op-detail-result {
+    font-size: 26px; font-weight: 700; letter-spacing: -.6px; line-height: 1;
+  }
+  .op-detail-result.take { color: var(--green); }
+  .op-detail-result.stop { color: var(--red); }
+  .op-detail-pct {
+    font-size: 12px; font-weight: 500; margin-top: 5px;
+  }
+  .op-detail-pct.take { color: var(--green-dim); }
+  .op-detail-pct.stop { color: var(--red-dim); }
+  .op-detail-body {
+    padding: 18px 22px 22px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .op-detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 13px;
+    background: var(--surface-2);
+    border-radius: var(--r);
+    font-size: 13px;
+  }
+  .op-detail-row-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--muted); font-weight: 500;
+  }
+  .op-detail-row-value {
+    font-weight: 500; color: var(--text); display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;
+  }
+  .op-detail-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 18px; line-height: 1;
+    padding: 4px 6px; border-radius: var(--r); transition: all .15s;
+    flex-shrink: 0; margin-top: -2px;
+  }
+  .op-detail-close:hover { color: var(--text); background: var(--surface-2); }
+  .op-detail-footer {
+    padding: 0 22px 18px;
+    display: flex; gap: 8px;
+  }
+
+
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;}
   .modal{
     background:var(--surface);
@@ -722,11 +804,12 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    transition: border-color var(--t), transform var(--t);
-    cursor: default;
+    transition: border-color var(--t), transform var(--t), box-shadow var(--t);
+    cursor: pointer;
     position: relative;
     overflow: hidden;
   }
+  .op-card:hover { border-color: var(--border-focus); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.45); }
   .op-card::before {
     content: '';
     position: absolute;
@@ -737,8 +820,6 @@
   .op-card.take::before { background: var(--green-dim); }
   .op-card.stop { border-color: rgba(224,112,112,.2); }
   .op-card.stop::before { background: var(--red-dim); }
-  .op-card:hover { border-color: var(--border-focus); transform: translateY(-1px); }
-
   .op-card-num {
     font-size: 9.5px;
     color: var(--faint);
@@ -2092,7 +2173,7 @@ function _renderBlocoDetail(bi) {
     const pct    = capital > 0 ? (t.result / capital * 100) : null;
     const pctStr = pct !== null ? `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%` : '';
     cardsHtml += `
-      <div class="op-card ${type}" title="${t.asset} \u2022 ${t.date}">
+      <div class="op-card ${type}" title="${t.asset} \u2022 ${t.date}" onclick="openOpDetail('${t.id}')">
         <div class="op-card-num">#${globalNum}</div>
         <div class="op-card-asset">${t.asset || '\u2014'}</div>
         <div class="op-card-result">${fmt(t.result)}</div>
@@ -3287,12 +3368,108 @@ function copyCalcResult() {
 /* ══════════════════════════════════════════════════════════════ */
 
 /* ── exclusão ─────────────────────────────────────────────── */
+function openOpDetail(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+
+  const isWin  = t.result > 0;
+  const type   = isWin ? 'take' : 'stop';
+  const capital = _diarioCapital || initialBalance || 0;
+  const pct     = capital > 0 ? (t.result / capital * 100) : null;
+  const pctStr  = pct !== null ? `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%` : null;
+
+  // global index
+  const sorted = [...trades].sort((a,b) => {
+    const ka = (a.date||'')+'T'+(a.time||'00:00');
+    const kb = (b.date||'')+'T'+(b.time||'00:00');
+    return ka.localeCompare(kb);
+  });
+  const globalNum = sorted.findIndex(x => x.id === id) + 1;
+
+  const strats = Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []);
+  const tfs    = Array.isArray(t.tf)       ? t.tf       : (t.tf       ? [t.tf]       : []);
+  const dateStr = t.date ? t.date.split('-').reverse().join('/') : '—';
+  const datetime = dateStr + (t.time ? ' às ' + t.time : '');
+
+  const mC = {'Forex':'forex','Crypto':'crypto','B3 Futuros':'futuros','Ações B3':'acoes'};
+  const marketBadge = t.market ? `<span class="badge badge-${mC[t.market]||''}">${t.market}</span>` : '—';
+  const dirBadge    = t.dir    ? `<span class="badge badge-${(t.dir).toLowerCase()}">${t.dir}</span>` : '—';
+  const stratHtml   = strats.length ? strats.map(colorCtag).join('') : '<span style="color:var(--muted)">—</span>';
+  const tfHtml      = tfs.length    ? tfs.map(colorCtag).join('')    : '<span style="color:var(--muted)">—</span>';
+  const gatilhoHtml = t.gatilho ? `<span class="ctag" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border)">${t.gatilho}</span>` : '—';
+
+  document.getElementById('opDetailModal').innerHTML = `
+    <div class="op-detail-modal">
+      <div class="op-detail-stripe ${type}"></div>
+      <div class="op-detail-head">
+        <div class="op-detail-head-left">
+          <div class="op-detail-num">Operação #${globalNum}</div>
+          <div class="op-detail-asset">${t.asset || '—'}</div>
+          <div class="op-detail-date">${datetime}</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:18px">
+          <div class="op-detail-result-col">
+            <div class="op-detail-result ${type}">${fmt(t.result)}</div>
+            ${pctStr ? `<div class="op-detail-pct ${type}">${pctStr} do capital</div>` : ''}
+          </div>
+          <button class="op-detail-close" onclick="closeOpDetail()">✕</button>
+        </div>
+      </div>
+      <div class="op-detail-body">
+        <div class="op-detail-row">
+          <span class="op-detail-row-label">Mercado</span>
+          <span class="op-detail-row-value">${marketBadge}</span>
+        </div>
+        <div class="op-detail-row">
+          <span class="op-detail-row-label">Direção</span>
+          <span class="op-detail-row-value">${dirBadge}</span>
+        </div>
+        <div class="op-detail-row">
+          <span class="op-detail-row-label">Estratégia</span>
+          <span class="op-detail-row-value">${stratHtml}</span>
+        </div>
+        <div class="op-detail-row">
+          <span class="op-detail-row-label">Gatilho</span>
+          <span class="op-detail-row-value">${gatilhoHtml}</span>
+        </div>
+        <div class="op-detail-row">
+          <span class="op-detail-row-label">Timeframe</span>
+          <span class="op-detail-row-value">${tfHtml}</span>
+        </div>
+        ${t.notes ? `
+        <div class="op-detail-row">
+          <span class="op-detail-row-label">Observação</span>
+          <span class="op-detail-row-value" style="color:var(--muted)">${t.notes}</span>
+        </div>` : ''}
+      </div>
+      <div class="op-detail-footer">
+        <button class="btn btn-sm" onclick="openEdit('${t.id}');closeOpDetail()">✎ Editar</button>
+        <button class="btn btn-sm" onclick="closeOpDetail()">Fechar</button>
+      </div>
+    </div>`;
+
+  const overlay = document.getElementById('opDetailOverlay');
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => overlay.classList.add('open'));
+}
+
+function closeOpDetail() {
+  const overlay = document.getElementById('opDetailOverlay');
+  overlay.classList.remove('open');
+  setTimeout(() => { overlay.style.display = 'none'; }, 180);
+}
+
 async function deleteTrade(id) {
   if (!confirm('Excluir esta operação?')) return;
   try { await window._fbRemove(id); showToast('Operação removida.'); }
   catch(e) { alert('Erro ao excluir.'); }
 }
 </script>
+<!-- MODAL DETALHE DA OPERAÇÃO -->
+<div class="op-detail-overlay" id="opDetailOverlay" onclick="if(event.target.id==='opDetailOverlay')closeOpDetail()">
+  <div id="opDetailModal"></div>
+</div>
+
 <!-- MODAL IMPORTAR BYBIT -->
 <div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target.id==='importModal')document.getElementById('importModal').style.display='none'">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:860px">
