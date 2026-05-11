@@ -305,21 +305,26 @@
   .op-detail-pct.stop { color: var(--red-dim); }
   .op-detail-body {
     padding: 18px 22px 22px;
-    display: flex; flex-direction: column; gap: 10px;
+    display: flex; flex-direction: column; gap: 7px;
   }
   .op-detail-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 9px 13px;
+    padding: 10px 14px;
     background: var(--surface-2);
     border-radius: var(--r);
     font-size: 13px;
+    min-height: 40px;
   }
+  .op-detail-row.obs { align-items: flex-start; gap: 16px; }
   .op-detail-row-label {
     font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px;
-    color: var(--muted); font-weight: 500;
+    color: var(--muted); font-weight: 500; flex-shrink: 0;
   }
   .op-detail-row-value {
     font-weight: 500; color: var(--text); display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;
+  }
+  .op-detail-row-value.obs-text {
+    color: var(--muted); font-weight: 400; text-align: right; line-height: 1.55;
   }
   .op-detail-close {
     background: none; border: none; cursor: pointer;
@@ -3437,9 +3442,9 @@ function openOpDetail(id) {
           <span class="op-detail-row-value">${tfHtml}</span>
         </div>
         ${t.notes ? `
-        <div class="op-detail-row">
+        <div class="op-detail-row obs">
           <span class="op-detail-row-label">Observação</span>
-          <span class="op-detail-row-value" style="color:var(--muted)">${t.notes}</span>
+          <span class="op-detail-row-value obs-text">${t.notes}</span>
         </div>` : ''}
       </div>
       <div class="op-detail-footer">
