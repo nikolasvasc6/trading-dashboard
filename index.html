@@ -703,6 +703,16 @@
     background:var(--surface-2);border:1px solid var(--border);
     color:var(--text);padding:8px 11px;border-radius:var(--r);
     font-size:13px;outline:none;width:100%;transition:border-color var(--t);
+    box-sizing:border-box;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  .op-filter-group input[type="date"]{
+    -webkit-appearance:none;
+    appearance:none;
+    box-sizing:border-box;
+    width:100%;
+    min-width:0;
   }
   .op-filter-group select:focus,.op-filter-group input:focus{border-color:var(--border-focus);}
   .op-shortcuts{display:flex;gap:6px;flex-wrap:wrap;}
@@ -716,8 +726,13 @@
   .op-shortcut.active{background:var(--surface-2);color:var(--text);border-color:var(--border-focus);}
   .op-filter-actions{display:flex;align-items:flex-end;gap:8px;margin-left:auto;}
   @media(max-width:640px){
-    .op-filters{flex-direction:column;gap:10px;}
-    .op-filter-group{min-width:0;width:100%;}
+    .op-filters{flex-direction:column;gap:10px;padding:14px 14px;}
+    .op-filter-group{min-width:0;width:100%;box-sizing:border-box;}
+    .op-filter-group select,
+    .op-filter-group input,
+    .op-filter-group input[type="date"]{
+      width:100%;box-sizing:border-box;font-size:16px;
+    }
     .op-filter-actions{margin-left:0;width:100%;justify-content:flex-end;}
   }
 
