@@ -13,46 +13,187 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPCEtLSBCYWNrZ3JvdW5kIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjYiIGZpbGw9IiMxYTFhMTgiLz4KICA8IS0tIEJlYXJpc2ggY2FuZGxlIChyZWQpIC0gbGVmdCAtLT4KICA8bGluZSB4MT0iOSIgeTE9IjQiIHgyPSI5IiB5Mj0iOCIgc3Ryb2tlPSIjZjA5NTk1IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjYiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiNhMzJkMmQiLz4KICA8bGluZSB4MT0iOSIgeTE9IjE3IiB4Mj0iOSIgeTI9IjIxIiBzdHJva2U9IiNmMDk1OTUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSBjZW50ZXIgLS0+CiAgPGxpbmUgeDE9IjE2IiB5MT0iNSIgeDI9IjE2IiB5Mj0iMTAiIHN0cm9rZT0iIzk3YzQ1OSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxyZWN0IHg9IjEzIiB5PSIxMCIgd2lkdGg9IjYiIGhlaWdodD0iMTIiIHJ4PSIxIiBmaWxsPSIjM2I2ZDExIi8+CiAgPGxpbmUgeDE9IjE2IiB5MT0iMjIiIHgyPSIxNiIgeTI9IjI3IiBzdHJva2U9IiM5N2M0NTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIEJ1bGxpc2ggY2FuZGxlIChncmVlbikgLSByaWdodCwgc21hbGxlciAtLT4KICA8bGluZSB4MT0iMjMiIHkxPSI4IiB4Mj0iMjMiIHkyPSIxMiIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHJlY3QgeD0iMjAiIHk9IjEyIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMSIgZmlsbD0iIzNiNmQxMSIvPgogIDxsaW5lIHgxPSIyMyIgeTE9IjIwIiB4Mj0iMjMiIHkyPSIyNCIgc3Ryb2tlPSIjOTdjNDU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==">
 <style>
   /* ═══════════════════════════════════════════════════════════
-     DESIGN TOKENS — Trading Dashboard
-     ═══════════════════════════════════════════════════════════ */
-  :root {
-    color-scheme: dark;
+     TEMAS — Trading Dashboard
+     ═══════════════════════════════════════════════════════════
 
-    /* Background hierarchy — subtle blue-tinted dark */
+     1. carbon   — dark azul-carvão (padrão)
+     2. onyx     — preto puro, bordas neon-verde
+     3. void     — dark roxo profundo
+     4. dusk     — dark âmbar/cobre, tom quente
+     5. aurora   — claro branco-gelo, acento teal
+     ═══════════════════════════════════════════════════════════ */
+
+  /* ── 1. Carbon (padrão) ─────────────────────────────────── */
+  :root, [data-theme="carbon"] {
+    color-scheme: dark;
     --bg:        #0e1117;
     --surface:   #161b26;
     --surface-2: #1e2535;
     --surface-3: #252d3d;
-
-    /* Borders */
     --border:        rgba(255,255,255,0.07);
     --border-strong: rgba(255,255,255,0.14);
     --border-focus:  rgba(255,255,255,0.35);
-
-    /* Typography */
     --text:  #e4e8f0;
     --muted: #7a8494;
     --faint: #3d4455;
-
-    /* Semantic colors — refined palette */
     --green:    #5cb87a;  --green-bg:  #0c2317;  --green-dim: #3d8a57;
     --red:      #e07070;  --red-bg:    #2a1010;  --red-dim:   #a84040;
     --amber:    #d4963a;  --amber-bg:  #2a1e08;
     --blue:     #6fa8d4;  --blue-bg:   #0a1e35;
     --teal:     #4ab89a;  --teal-bg:   #062820;
     --purple:   #9e97d8;  --purple-bg: #1a1640;
+  }
 
-    /* Spacing & shape */
+  /* ── 2. Onyx — preto absoluto, acento verde neon ─────────── */
+  [data-theme="onyx"] {
+    color-scheme: dark;
+    --bg:        #000000;
+    --surface:   #0a0a0a;
+    --surface-2: #111111;
+    --surface-3: #1a1a1a;
+    --border:        rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.12);
+    --border-focus:  rgba(57,255,100,0.5);
+    --text:  #f0f0f0;
+    --muted: #666666;
+    --faint: #2a2a2a;
+    --green:    #39ff64;  --green-bg:  #002210;  --green-dim: #1fcc45;
+    --red:      #ff4d4d;  --red-bg:    #200808;  --red-dim:   #cc2222;
+    --amber:    #ffa726;  --amber-bg:  #1a0e00;
+    --blue:     #42a5f5;  --blue-bg:   #001828;
+    --teal:     #26c6da;  --teal-bg:   #001e22;
+    --purple:   #ce93d8;  --purple-bg: #160c20;
+  }
+
+  /* ── 3. Void — roxo profundo, estilo cripto ──────────────── */
+  [data-theme="void"] {
+    color-scheme: dark;
+    --bg:        #0b0a14;
+    --surface:   #12101e;
+    --surface-2: #1a1830;
+    --surface-3: #221f3d;
+    --border:        rgba(180,160,255,0.09);
+    --border-strong: rgba(180,160,255,0.18);
+    --border-focus:  rgba(180,160,255,0.45);
+    --text:  #e8e4ff;
+    --muted: #7c74a8;
+    --faint: #332e5a;
+    --green:    #7ee89c;  --green-bg:  #0a2218;  --green-dim: #4bbf72;
+    --red:      #f48c8c;  --red-bg:    #2a0f18;  --red-dim:   #c05050;
+    --amber:    #f5c06a;  --amber-bg:  #261800;
+    --blue:     #82b4ff;  --blue-bg:   #0c1840;
+    --teal:     #5cdccc;  --teal-bg:   #062420;
+    --purple:   #b39dff;  --purple-bg: #1e1650;
+  }
+
+  /* ── 4. Dusk — carvão quente, acento âmbar/cobre ─────────── */
+  [data-theme="dusk"] {
+    color-scheme: dark;
+    --bg:        #110e09;
+    --surface:   #1c1712;
+    --surface-2: #261e15;
+    --surface-3: #30271a;
+    --border:        rgba(255,200,100,0.08);
+    --border-strong: rgba(255,200,100,0.16);
+    --border-focus:  rgba(255,180,60,0.45);
+    --text:  #f0e8d8;
+    --muted: #8c7a60;
+    --faint: #3d3020;
+    --green:    #7ec87e;  --green-bg:  #0e2210;  --green-dim: #4a9e4a;
+    --red:      #e87070;  --red-bg:    #280c0c;  --red-dim:   #b84040;
+    --amber:    #f0a830;  --amber-bg:  #28160a;
+    --blue:     #78b4e0;  --blue-bg:   #0c1e30;
+    --teal:     #50c8a8;  --teal-bg:   #082420;
+    --purple:   #b090d0;  --purple-bg: #1c1430;
+  }
+
+  /* ── 5. Aurora — claro gelo, acento teal ─────────────────── */
+  [data-theme="aurora"] {
+    color-scheme: light;
+    --bg:        #f2f5f8;
+    --surface:   #ffffff;
+    --surface-2: #eef1f5;
+    --surface-3: #e2e7ee;
+    --border:        rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.16);
+    --border-focus:  rgba(0,140,130,0.5);
+    --text:  #1a2332;
+    --muted: #6b7a90;
+    --faint: #c4cdd8;
+    --green:    #1a9e7a;  --green-bg:  #e0f5ef;  --green-dim: #2dc89a;
+    --red:      #d44040;  --red-bg:    #fdeaea;  --red-dim:   #b03030;
+    --amber:    #c07020;  --amber-bg:  #fef5e0;
+    --blue:     #2070c0;  --blue-bg:   #e0ecfa;
+    --teal:     #008c82;  --teal-bg:   #d8f4f2;
+    --purple:   #6048b0;  --purple-bg: #ede8fa;
+  }
+
+  /* aurora: ajustes de elementos que assumem dark ──────────── */
+  [data-theme="aurora"] input, [data-theme="aurora"] select, [data-theme="aurora"] textarea {
+    color-scheme: light;
+  }
+  [data-theme="aurora"] input[type=date]::-webkit-calendar-picker-indicator,
+  [data-theme="aurora"] input[type=time]::-webkit-calendar-picker-indicator { filter: none; }
+  [data-theme="aurora"] ::-webkit-scrollbar-thumb { background: var(--surface-3); }
+  [data-theme="aurora"] .nav-item.active { background: var(--surface-3); }
+  [data-theme="aurora"] .sidebar { background: #f8fafc; }
+  [data-theme="aurora"] .op-card.pos { background: #e8f5ee; }
+  [data-theme="aurora"] .op-card.neg { background: #fdeaea; }
+  [data-theme="aurora"] .op-card.zero { background: var(--surface-2); }
+  [data-theme="aurora"] .bloco { background: #ffffff; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+
+  /* onyx: acento neon nos elementos ativos ─────────────────── */
+  [data-theme="onyx"] .nav-item.active .nav-icon { color: #39ff64; }
+  [data-theme="onyx"] .nav-item.active { border-color: #39ff64; }
+  [data-theme="onyx"] .btn-primary { background: #39ff64; color: #000; }
+  [data-theme="onyx"] .btn-primary:hover { background: #55ff7a; }
+
+  /* void: gradiente sutil no fundo ────────────────────────── */
+  [data-theme="void"] body { background: radial-gradient(ellipse at 20% 0%, #1a1040 0%, #0b0a14 60%); }
+
+  /* dusk: warm glow nos cards ─────────────────────────────── */
+  [data-theme="dusk"] .card { border-color: rgba(255,180,60,0.08); }
+  [data-theme="dusk"] .sidebar { border-right-color: rgba(255,180,60,0.10); }
+
+  /* ── Seletor de tema ─────────────────────────────────────── */
+  .theme-picker {
+    display: flex; gap: 7px; flex-wrap: wrap;
+    padding: 10px 12px 6px;
+  }
+  .theme-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    cursor: pointer; border: 2px solid transparent;
+    transition: all .18s; flex-shrink: 0;
+    position: relative;
+  }
+  .theme-dot:hover { transform: scale(1.2); }
+  .theme-dot.active {
+    border-color: var(--text);
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .theme-dot[data-t="carbon"] { background: #161b26; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+  .theme-dot[data-t="onyx"]   { background: #000000; box-shadow: inset 0 0 0 1px #39ff6440; }
+  .theme-dot[data-t="void"]   { background: linear-gradient(135deg,#12101e,#2a1f60); }
+  .theme-dot[data-t="dusk"]   { background: linear-gradient(135deg,#1c1712,#3d2a0e); }
+  .theme-dot[data-t="aurora"] { background: linear-gradient(135deg,#f2f5f8,#c8e8e0); box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+  .theme-dot.active[data-t="carbon"] { border-color: #5cb87a; }
+  .theme-dot.active[data-t="onyx"]   { border-color: #39ff64; }
+  .theme-dot.active[data-t="void"]   { border-color: #b39dff; }
+  .theme-dot.active[data-t="dusk"]   { border-color: #f0a830; }
+  .theme-dot.active[data-t="aurora"] { border-color: #008c82; box-shadow: 0 0 0 2px #f2f5f8; }
+  .theme-label {
+    font-size: 9.5px; color: var(--faint); text-transform: uppercase;
+    letter-spacing: .8px; font-weight: 600; padding: 0 12px 4px;
+  }
+
+  /* ── Tokens invariantes (espaço, sombra, animação) ─────────── */
+  :root {
     --r:  8px;
     --rl: 14px;
     --rx: 20px;
-
-    /* Elevation shadows */
     --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
     --shadow-md: 0 4px 16px rgba(0,0,0,.5);
     --shadow-lg: 0 12px 40px rgba(0,0,0,.65);
-
-    /* Transitions */
     --t: .18s ease;
   }
 
@@ -136,6 +277,11 @@
   }
   .nav-label{flex:1;}
 
+  .sidebar-themes{
+    border-top:1px solid var(--border);
+    padding:8px 0 4px;
+    flex-shrink:0;
+  }
   .sidebar-bottom{
     padding:14px 12px;
     border-top:1px solid var(--border);
@@ -1285,6 +1431,17 @@
       </button>
     </nav>
 
+    <div class="sidebar-themes">
+      <div class="theme-label">Tema</div>
+      <div class="theme-picker">
+        <div class="theme-dot active" data-t="carbon" title="Carbon" onclick="setTheme('carbon')"></div>
+        <div class="theme-dot" data-t="onyx"   title="Onyx"   onclick="setTheme('onyx')"></div>
+        <div class="theme-dot" data-t="void"   title="Void"   onclick="setTheme('void')"></div>
+        <div class="theme-dot" data-t="dusk"   title="Dusk"   onclick="setTheme('dusk')"></div>
+        <div class="theme-dot" data-t="aurora" title="Aurora" onclick="setTheme('aurora')"></div>
+      </div>
+    </div>
+
     <div class="sidebar-bottom">
       <div class="sidebar-status">
         <div class="dot spin" id="status-dot"></div>
@@ -1996,7 +2153,38 @@ function switchTab(name) {
   try { localStorage.setItem('td_active_tab', name); } catch(e){}
 }
 
-// Restore last tab on load
+/* ── Temas ────────────────────────────────────────────────── */
+const THEMES = ['carbon','onyx','void','dusk','aurora'];
+
+function setTheme(name) {
+  if (!THEMES.includes(name)) name = 'carbon';
+  document.documentElement.setAttribute('data-theme', name);
+  // Atualiza dot ativo
+  document.querySelectorAll('.theme-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.t === name);
+  });
+  // Persiste
+  try { localStorage.setItem('td_theme', name); } catch(e) {}
+  // color-scheme meta
+  const isLight = name === 'aurora';
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', isLight ? 'light' : 'dark');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',
+    name === 'onyx' ? '#000000' : name === 'aurora' ? '#f2f5f8' :
+    name === 'void' ? '#0b0a14' : name === 'dusk' ? '#110e09' : '#0e1117');
+}
+
+function restoreTheme() {
+  try {
+    const saved = localStorage.getItem('td_theme');
+    if (saved && THEMES.includes(saved)) { setTheme(saved); return; }
+  } catch(e) {}
+  setTheme('carbon');
+}
+
+// Restaura tema o mais cedo possível
+restoreTheme();
+
+/* ── Restaura tab ────────────────────────────────────────── */
 function restoreTab() {
   try {
     const saved = localStorage.getItem('td_active_tab');
