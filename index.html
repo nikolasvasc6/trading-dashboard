@@ -2060,27 +2060,41 @@ function renderDiario() {
     delete _diarioCharts[k];
   });
 
+  // Trades contabilizados nos blocos: apenas |resultado| >= $1
+  // Trades excluídos ainda impactam o capital (contabilidade geral)
+  const blockTrades   = sorted.filter(t => Math.abs(t.result) >= 1);
+  const excludedCount = sorted.length - blockTrades.length;
+
+  if (!blockTrades.length) {
+    container.innerHTML = `<div class="diario-empty"><span>📓</span>Nenhuma operação com resultado ≥ $1 registrada.<br>${excludedCount > 0 ? `${excludedCount} operação(ões) com resultado < $1 estão na contabilidade geral do capital.` : ''}</div>`;
+    return;
+  }
+
   _diarioCapital = initialBalance || 0;
   _diarioBlocks = [];
-  for (let i = 0; i < sorted.length; i += DIARIO_BLOCK_SIZE) {
-    _diarioBlocks.push(sorted.slice(i, i + DIARIO_BLOCK_SIZE));
+  for (let i = 0; i < blockTrades.length; i += DIARIO_BLOCK_SIZE) {
+    _diarioBlocks.push(blockTrades.slice(i, i + DIARIO_BLOCK_SIZE));
   }
 
   const capital = _diarioCapital;
   const blocks  = _diarioBlocks;
 
+  // Capital usa TODOS os trades (contabilidade geral)
   const totalResult = sorted.reduce((s, t) => s + t.result, 0);
-  const totalWins   = sorted.filter(t => t.result > 0).length;
-  const totalWR     = sorted.length ? (totalWins / sorted.length * 100).toFixed(1) : '0.0';
   const currentCap  = capital + totalResult;
   const capPct      = capital > 0 ? ((totalResult / capital) * 100).toFixed(2) : null;
+
+  // Win Rate e contagem de operações usam apenas blockTrades
+  const totalWins   = blockTrades.filter(t => t.result > 0).length;
+  const totalWR     = blockTrades.length ? (totalWins / blockTrades.length * 100).toFixed(1) : '0.0';
 
   let html = '';
 
   html += `<div class="diario-summary">
     <div class="diario-sum-card">
-      <div class="diario-sum-label">Total de Operações</div>
-      <div class="diario-sum-value neutral">${sorted.length}</div>
+      <div class="diario-sum-label">Operações nos Blocos</div>
+      <div class="diario-sum-value neutral">${blockTrades.length}</div>
+      ${excludedCount > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">${excludedCount} excluída(s) &lt;$1</div>` : ''}
     </div>
     <div class="diario-sum-card">
       <div class="diario-sum-label">Blocos</div>
