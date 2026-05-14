@@ -336,7 +336,45 @@
 
   /* ── Chart cards ─────────────────────────────────────────── */
   .charts-top{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
-  .charts-bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
+  .charts-bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .charts-strat{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
+
+  /* ── Top Assets card ──────────────────────────────────────── */
+  .top-assets-list{display:flex;flex-direction:column;gap:0;padding-top:4px;}
+  .top-assets-empty{padding:40px 16px;text-align:center;font-size:13px;color:var(--muted);}
+  .top-asset-row{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 0;border-bottom:1px solid var(--border);
+  }
+  .top-asset-row:last-child{border-bottom:none;padding-bottom:4px;}
+  .top-asset-rank{
+    width:22px;height:22px;flex-shrink:0;
+    border-radius:50%;background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;font-weight:700;color:var(--muted);
+  }
+  .top-asset-rank.gold{background:rgba(212,170,58,.18);color:#d4aa3a;}
+  .top-asset-rank.silver{background:rgba(160,160,160,.15);color:#a0a0a0;}
+  .top-asset-rank.bronze{background:rgba(176,110,70,.15);color:#b06e46;}
+  .top-asset-info{flex:1;min-width:0;}
+  .top-asset-name{font-size:13.5px;font-weight:600;color:var(--text);letter-spacing:-.2px;}
+  .top-asset-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .top-asset-right{text-align:right;flex-shrink:0;}
+  .top-asset-result{font-size:14px;font-weight:600;letter-spacing:-.3px;}
+  .top-asset-wr{font-size:11px;margin-top:2px;}
+  .top-asset-bar-wrap{margin-top:6px;height:3px;border-radius:2px;background:var(--surface-3);overflow:hidden;}
+  .top-asset-bar{height:100%;border-radius:2px;transition:width .4s ease;}
+  .top-assets-footer{
+    padding-top:12px;margin-top:4px;
+    border-top:1px solid var(--border);
+    display:flex;justify-content:flex-end;
+  }
+  .top-assets-ver-todos{
+    background:transparent;border:none;cursor:pointer;
+    font-size:12px;font-weight:500;color:var(--muted);
+    padding:4px 0;transition:color .15s;letter-spacing:.1px;
+  }
+  .top-assets-ver-todos:hover{color:var(--text);}
   .card{
     background:var(--surface);
     border:1px solid var(--border);
@@ -831,7 +869,7 @@
     .kpi{padding:12px 14px;}
     .kpi-value{font-size:20px;}
     .kpi-sub{font-size:11px;}
-    .charts-top,.charts-bottom{grid-template-columns:1fr;gap:10px;margin-bottom:10px;}
+    .charts-top,.charts-bottom,.charts-strat{grid-template-columns:1fr;gap:10px;margin-bottom:10px;}
     .card{padding:14px;}
     .charts-top .card:first-child .chart-wrap{height:180px !important;}
     .charts-top .card:last-child .chart-wrap{height:150px !important;}
@@ -1341,13 +1379,25 @@
     <div class="card"><div class="card-title">Resultado por Mês</div><div class="chart-wrap" style="height:200px"><canvas id="monthChart"></canvas></div></div>
   </div>
 
-  <div class="card" style="margin-bottom:24px">
-    <div class="card-title">Resultado por Estratégia</div>
-    <div class="chart-wrap" id="stratChartWrap" style="height:260px">
-      <canvas id="stratChart"></canvas>
+  <div class="charts-strat">
+    <div class="card">
+      <div class="card-title">Resultado por Estratégia</div>
+      <div class="chart-wrap" id="stratChartWrap" style="height:260px">
+        <canvas id="stratChart"></canvas>
+      </div>
+      <div id="stratEmpty" style="display:none;padding:40px;text-align:center;font-size:13px;color:var(--muted)">
+        Nenhuma estratégia registrada ainda.
+      </div>
     </div>
-    <div id="stratEmpty" style="display:none;padding:40px;text-align:center;font-size:13px;color:var(--muted)">
-      Nenhuma estratégia registrada ainda.
+
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="card-title">Top 3 Ativos</div>
+      <div id="top-assets-list" class="top-assets-list" style="flex:1">
+        <div class="top-assets-empty">Sem operações registradas.</div>
+      </div>
+      <div class="top-assets-footer">
+        <button class="top-assets-ver-todos" onclick="switchTab('operacoes')">Ver todos →</button>
+      </div>
     </div>
   </div>
 
@@ -2661,7 +2711,62 @@ function _renderBlocoDetail(bi) {
   });
 }
 
-function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart(); renderStratChart(); renderTable(); if (document.getElementById('tab-diario').classList.contains('active')) renderDiario(); }
+function renderTopAssets() {
+  const data = getFiltered();
+  const el   = document.getElementById('top-assets-list');
+  if (!el) return;
+
+  if (!data.length) {
+    el.innerHTML = '<div class="top-assets-empty">Sem operações registradas.</div>';
+    return;
+  }
+
+  // Agrupa por ativo
+  const map = {};
+  data.forEach(t => {
+    const key = (t.asset || 'Desconhecido').toUpperCase();
+    if (!map[key]) map[key] = { asset: t.asset || 'Desconhecido', total: 0, wins: 0, count: 0 };
+    map[key].total += t.result;
+    map[key].count++;
+    if (t.result > 0) map[key].wins++;
+  });
+
+  const sorted = Object.values(map)
+    .sort((a, b) => b.count - a.count)   // ordena por nº de operações
+    .slice(0, 3);
+
+  const maxAbs = Math.max(...sorted.map(a => Math.abs(a.total)), 0.01);
+  const ranks  = ['gold', 'silver', 'bronze'];
+  const medals = ['🥇', '🥈', '🥉'];
+
+  el.innerHTML = sorted.map((a, i) => {
+    const wr      = a.count ? (a.wins / a.count * 100).toFixed(0) : 0;
+    const pos     = a.total >= 0;
+    const resColor = pos ? 'var(--green)' : 'var(--red)';
+    const barColor = pos ? 'var(--green)' : 'var(--red)';
+    const barW    = (Math.abs(a.total) / maxAbs * 100).toFixed(1);
+    const res     = (pos ? '+' : '') + '$ ' + Math.abs(a.total).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const wrColor = parseFloat(wr) >= 50 ? 'var(--green)' : 'var(--red)';
+
+    return `
+    <div class="top-asset-row">
+      <div class="top-asset-rank ${ranks[i]}">${medals[i]}</div>
+      <div class="top-asset-info">
+        <div class="top-asset-name">${a.asset}</div>
+        <div class="top-asset-meta">${a.count} operações</div>
+        <div class="top-asset-bar-wrap">
+          <div class="top-asset-bar" style="width:${barW}%;background:${barColor};"></div>
+        </div>
+      </div>
+      <div class="top-asset-right">
+        <div class="top-asset-result" style="color:${resColor}">${res}</div>
+        <div class="top-asset-wr" style="color:${wrColor}">WR ${wr}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() { updateAssetList(); updateOpStrategyList(); renderKPIs(); renderEquityChart(); renderWinLossChart(); renderMarketChart(); renderMonthChart(); renderStratChart(); renderTopAssets(); renderTable(); if (document.getElementById('tab-diario').classList.contains('active')) renderDiario(); }
 
 /* ── form nova operação ───────────────────────────────────── */
 function toggleForm() {
