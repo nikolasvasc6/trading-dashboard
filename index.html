@@ -679,14 +679,37 @@
   .balance-banner .bb-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;font-weight:500;}
   .balance-banner .bb-value{font-size:23px;font-weight:600;letter-spacing:-.5px;}
   .balance-banner .bb-divider{width:1px;height:44px;background:var(--border);flex-shrink:0;}
-  .balance-banner .bb-input-group{display:flex;align-items:center;gap:10px;margin-left:auto;}
-  .balance-banner .bb-input-group label{font-size:11.5px;color:var(--muted);white-space:nowrap;}
-  .balance-banner input.bb-input{
-    background:var(--surface-2);border:1px solid var(--border);
-    color:var(--text);padding:7px 12px;border-radius:var(--r);
-    font-size:13px;outline:none;width:150px;transition:border-color var(--t);
+  .balance-banner .bb-input-group{
+    display:flex;flex-direction:column;gap:5px;margin-left:auto;min-width:160px;
   }
-  .balance-banner input.bb-input:focus{border-color:var(--border-focus);}
+  .balance-banner .bb-input-group label{
+    font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:500;
+  }
+  .bb-display{display:flex;align-items:center;gap:8px;}
+  .bb-display-value{font-size:14px;font-weight:500;color:var(--text);}
+  .bb-edit-btn{
+    background:transparent;border:none;cursor:pointer;
+    font-size:13px;padding:2px 4px;border-radius:4px;
+    opacity:.45;transition:opacity .15s;line-height:1;
+  }
+  .bb-edit-btn:hover{opacity:1;}
+  .bb-edit-wrap{display:flex;align-items:center;gap:5px;}
+  .balance-banner input.bb-input{
+    background:var(--surface-2);border:1px solid var(--border-focus);
+    color:var(--text);padding:6px 10px;border-radius:var(--r);
+    font-size:13px;outline:none;width:130px;transition:border-color var(--t);
+    box-sizing:border-box;
+  }
+  .balance-banner input.bb-input:focus{border-color:var(--green);}
+  .bb-confirm-btn,.bb-cancel-btn{
+    border:none;border-radius:var(--r);
+    padding:5px 9px;font-size:12px;font-weight:600;cursor:pointer;
+    transition:all .15s;line-height:1;
+  }
+  .bb-confirm-btn{background:var(--green);color:#fff;}
+  .bb-confirm-btn:hover{filter:brightness(1.15);}
+  .bb-cancel-btn{background:var(--surface-3);color:var(--muted);}
+  .bb-cancel-btn:hover{color:var(--text);}
   .balance-pct{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px;margin-left:7px;letter-spacing:.1px;}
   .balance-pct.pos{background:var(--green-bg);color:var(--green);}
   .balance-pct.neg{background:var(--red-bg);color:var(--red);}
@@ -797,8 +820,13 @@
     .balance-banner > div:not(.bb-input-group){padding:12px 16px;border-bottom:.5px solid var(--border);}
     .balance-banner .bb-label{font-size:10px;margin-bottom:2px;}
     .balance-banner .bb-value{font-size:18px;}
-    .balance-banner .bb-input-group{padding:12px 16px;margin-left:0;border-top:.5px solid var(--border);gap:10px;}
-    .balance-banner input.bb-input{flex:1;width:auto;font-size:16px;}
+    .balance-banner .bb-input-group{
+      padding:12px 16px;margin-left:0;border-top:.5px solid var(--border);
+      flex-direction:row;align-items:center;gap:10px;min-width:0;width:100%;box-sizing:border-box;
+    }
+    .balance-banner .bb-input-group label{white-space:nowrap;}
+    .bb-display-value{font-size:13px;}
+    .balance-banner input.bb-input{flex:1;width:auto;font-size:16px;min-width:0;}
     .kpi-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
     .kpi{padding:12px 14px;}
     .kpi-value{font-size:20px;}
@@ -1280,14 +1308,24 @@
       <div class="bb-value" id="bb-current">$ —<span class="balance-pct" id="bb-pct" style="display:none"></span></div>
     </div>
     <div class="bb-input-group">
-      <label for="initial-balance-input">Definir saldo inicial</label>
-      <input class="bb-input" id="initial-balance-input" type="number" step="0.01" min="0" placeholder="ex: 10000.00" oninput="saveInitialBalance(this.value)">
+      <label>Saldo Inicial</label>
+      <!-- modo exibição (padrão) -->
+      <div class="bb-display" id="bb-display-wrap">
+        <span class="bb-display-value" id="bb-display-value">não definido</span>
+        <button class="bb-edit-btn" onclick="openBalanceEdit()" title="Editar saldo inicial">✏️</button>
+      </div>
+      <!-- modo edição (oculto por padrão) -->
+      <div class="bb-edit-wrap" id="bb-edit-wrap" style="display:none">
+        <input class="bb-input" id="initial-balance-input" type="number" step="0.01" min="0" placeholder="ex: 10000.00"
+               onkeydown="if(event.key==='Enter')confirmBalanceEdit();if(event.key==='Escape')cancelBalanceEdit();">
+        <button class="bb-confirm-btn" onclick="confirmBalanceEdit()" title="Confirmar">✓</button>
+        <button class="bb-cancel-btn"  onclick="cancelBalanceEdit()"  title="Cancelar">✕</button>
+      </div>
     </div>
   </div>
 
   <!-- KPIs -->
   <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-label">Resultado Acumulado</div><div class="kpi-value" id="kpi-result">—</div><div class="kpi-sub" id="kpi-result-sub">—</div></div>
     <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-value" id="kpi-winrate">—</div><div class="kpi-sub" id="kpi-winrate-sub">—</div></div>
     <div class="kpi"><div class="kpi-label">Drawdown Máximo</div><div class="kpi-value" id="kpi-drawdown">—</div><div class="kpi-sub" id="kpi-drawdown-sub">—</div></div>
     <div class="kpi"><div class="kpi-label">Total de Operações</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-sub" id="kpi-total-sub">—</div></div>
@@ -2038,10 +2076,48 @@ function calcKPIs(data) {
   return {total:data.length, wins, losses:data.length-wins, winRate:(wins/data.length*100).toFixed(1), drawdown:maxDD, accumulated:acc};
 }
 
+/* ── Saldo inicial — edição controlada ─────────────────────── */
+function openBalanceEdit() {
+  const input = document.getElementById('initial-balance-input');
+  const editWrap = document.getElementById('bb-edit-wrap');
+  const displayWrap = document.getElementById('bb-display-wrap');
+  if (!input || !editWrap || !displayWrap) return;
+  input.value = initialBalance > 0 ? initialBalance : '';
+  displayWrap.style.display = 'none';
+  editWrap.style.display = 'flex';
+  input.focus(); input.select();
+}
+function confirmBalanceEdit() {
+  const input = document.getElementById('initial-balance-input');
+  if (!input) return;
+  saveInitialBalance(input.value);
+  closeBalanceEdit();
+}
+function cancelBalanceEdit() { closeBalanceEdit(); }
+function closeBalanceEdit() {
+  const editWrap    = document.getElementById('bb-edit-wrap');
+  const displayWrap = document.getElementById('bb-display-wrap');
+  if (editWrap)    editWrap.style.display = 'none';
+  if (displayWrap) displayWrap.style.display = 'flex';
+  updateBalanceDisplay();
+}
+function updateBalanceDisplay() {
+  const el = document.getElementById('bb-display-value');
+  if (!el) return;
+  if (initialBalance > 0) {
+    el.textContent = '$ ' + initialBalance.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    el.style.color = '';
+  } else {
+    el.textContent = 'não definido';
+    el.style.color = 'var(--faint)';
+  }
+}
+
 function saveInitialBalance(val) {
   const parsed = parseFloat(val) || 0;
   initialBalance = parsed;
   if (window._fbSetBalance) window._fbSetBalance(parsed);
+  updateBalanceDisplay();
   renderKPIs();
 }
 
@@ -2062,6 +2138,7 @@ function getPeriodStartDate() {
 }
 
 function renderKPIs() {
+  updateBalanceDisplay();
   const k = calcKPIs(getFiltered()); const v = k.accumulated;
 
   // ── Balance banner ──────────────────────────────────────────
@@ -2101,9 +2178,6 @@ function renderKPIs() {
   }
 
   // ── KPI cards ───────────────────────────────────────────────
-  document.getElementById('kpi-result').textContent      = fmtAbs(v);
-  document.getElementById('kpi-result').className        = 'kpi-value ' + (v>=0?'pos':'neg');
-  document.getElementById('kpi-result-sub').textContent  = v>=0 ? '▲ Lucro acumulado' : '▼ Prejuízo acumulado';
   document.getElementById('kpi-winrate').textContent     = k.winRate + '%';
   document.getElementById('kpi-winrate').className       = 'kpi-value ' + (parseFloat(k.winRate)>=50?'pos':'neg');
   document.getElementById('kpi-winrate-sub').textContent = k.wins + ' ganhos · ' + k.losses + ' perdas';
