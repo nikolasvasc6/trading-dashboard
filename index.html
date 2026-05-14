@@ -614,6 +614,9 @@
   .action-btn{background:none;border:none;cursor:pointer;color:var(--faint);font-size:13px;padding:4px 8px;border-radius:5px;line-height:1;transition:all var(--t);}
   .action-btn.edit:hover{color:var(--blue);background:var(--blue-bg);}
   .action-btn.del:hover{color:var(--red);background:var(--red-bg);}
+  .th-sort-result{cursor:pointer;user-select:none;white-space:nowrap;transition:color var(--t);}
+  .th-sort-result:hover{color:var(--text);}
+  .sort-icon{font-size:10px;margin-left:3px;opacity:.6;}
   .empty-state{padding:48px;text-align:center;color:var(--muted);font-size:13px;letter-spacing:.2px;}
 
   /* ── Op-Detail Modal ──────────────────────────────────────── */
@@ -2575,12 +2578,28 @@ function renderMonthChart() {
 }
 
 /* ── tabela ───────────────────────────────────────────────── */
+let _tableSort = 'date_desc'; // 'date_desc' | 'result_desc' | 'result_asc'
+
+function toggleResultSort() {
+  _tableSort = _tableSort === 'result_desc' ? 'result_asc' : 'result_desc';
+  renderTable();
+}
+
 function renderTable() {
-  const d = getOpFiltered().sort((a,b) => {
-    const ka = (a.date||'') + 'T' + (a.time||'00:00');
-    const kb = (b.date||'') + 'T' + (b.time||'00:00');
-    return kb.localeCompare(ka);
-  });
+  let d = getOpFiltered();
+
+  if (_tableSort === 'result_desc') {
+    d = d.slice().sort((a, b) => b.result - a.result);
+  } else if (_tableSort === 'result_asc') {
+    d = d.slice().sort((a, b) => a.result - b.result);
+  } else {
+    d = d.slice().sort((a, b) => {
+      const ka = (a.date||'') + 'T' + (a.time||'00:00');
+      const kb = (b.date||'') + 'T' + (b.time||'00:00');
+      return kb.localeCompare(ka);
+    });
+  }
+
   document.getElementById('table-count').textContent =
     d.length + ' operação' + (d.length!==1?'s':'') + (d.length!==trades.length ? ' (de '+trades.length+' total)' : '');
   if (!d.length) {
@@ -2604,10 +2623,16 @@ function renderTable() {
         <button class="action-btn del"  onclick="deleteTrade('${t.id}')" title="Excluir">✕</button>
       </td>
     </tr>`).join('');
+
+  const sortIcon = _tableSort === 'result_desc' ? ' ↓' : _tableSort === 'result_asc' ? ' ↑' : ' ↕';
+  const dateActive = _tableSort === 'date_desc';
+
   document.getElementById('tableBody').innerHTML =
     `<table><thead><tr>
-      <th>Data</th><th>Mercado</th><th>Ativo</th><th>Direção</th>
-      <th>Resultado</th><th>Estratégia</th><th>Gatilho</th><th>TF</th><th>Obs.</th><th></th>
+      <th style="cursor:pointer;user-select:none;${dateActive?'color:var(--text)':''}" onclick="_tableSort='date_desc';renderTable()" title="Ordenar por data">Data${dateActive?' ↓':''}</th>
+      <th>Mercado</th><th>Ativo</th><th>Direção</th>
+      <th class="th-sort-result" onclick="toggleResultSort()" title="Ordenar por resultado">Resultado<span class="sort-icon">${sortIcon}</span></th>
+      <th>Estratégia</th><th>Gatilho</th><th>TF</th><th>Obs.</th><th></th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
