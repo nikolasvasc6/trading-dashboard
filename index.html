@@ -1297,8 +1297,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 4px;
-    height: 100px;
+    height: 120px;
     box-sizing: border-box;
     transition: border-color var(--t), transform var(--t), box-shadow var(--t);
     cursor: pointer;
@@ -2920,9 +2921,9 @@ function _renderBlocoDetail(bi) {
     const cardDate = t.date ? t.date.split('-').reverse().join('/') : '\u2014';
     cardsHtml += `
       <div class="op-card ${type}" title="${t.asset} \u2022 ${t.date}" onclick="openOpDetail('${t.id}')">
-        <div class="op-card-asset">${t.asset || '\u2014'}</div>
+        <div class="op-card-asset" style="${!t.asset ? 'color:var(--faint);font-weight:500;font-size:10px;' : ''}">${t.asset || 'sem ativo'}</div>
         <div class="op-card-result">${fmt(t.result)}</div>
-        ${pctStr ? `<div class="op-card-pct">${pctStr}</div>` : ''}
+        ${pctStr ? `<div class="op-card-pct" style="display:none">${pctStr}</div>` : ''}
         <div class="op-card-num">${cardDate}</div>
         <div class="op-card-type">${isWin ? 'Take' : 'Stop'}</div>
       </div>`;
