@@ -567,6 +567,10 @@
   .dlg-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:4px 8px;border-radius:var(--r);transition:all .15s;}
   .dlg-close:hover{color:var(--text);background:var(--surface-2);}
   .dlg-body{padding:20px 24px 24px;}
+  .ntd-notes-group{display:flex;flex-direction:column;gap:8px;margin-top:20px;}
+  .ntd-notes-group textarea{min-height:110px;height:110px;resize:vertical;width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;font-family:inherit;line-height:1.6;outline:none;transition:border-color var(--t),background var(--t);}
+  .ntd-notes-group textarea:focus{border-color:var(--border-focus);background:var(--surface-3);}
+  .ntd-form-actions{display:flex;gap:10px;margin-top:20px;padding-bottom:4px;}
   /* dropdowns live in normal stacking context — z-index works */
   .ms-dropdown{z-index:9999;}
   .form-title{font-size:15px;font-weight:600;margin-bottom:22px;letter-spacing:-.2px;}
@@ -583,6 +587,92 @@
   .form-group input:focus,.form-group select:focus{border-color:var(--border-focus);background:var(--surface-3);}
   .form-group select option{background:var(--surface);}
   .form-actions{display:flex;gap:10px;margin-top:20px;}
+
+
+  /* ── Cards topbar: view toggle + block counter ──────────────── */
+  .bloco-cards-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .bloco-view-toggle {
+    display: flex;
+    gap: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .bloco-view-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: .1px;
+  }
+  .bloco-view-btn:hover { color: var(--text); background: var(--surface-3); }
+  .bloco-view-btn.active { background: var(--surface-3); color: var(--text); }
+  .bloco-view-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .bloco-counter {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.2px;
+  }
+
+  /* ── List view table ─────────────────────────────────────────── */
+  .bloco-list-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .bloco-list-table thead th {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--faint);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    padding: 0 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .bloco-list-table thead th:last-child { text-align: right; }
+  .bloco-list-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .bloco-list-table tbody tr:last-child { border-bottom: none; }
+  .bloco-list-table tbody tr:hover { background: var(--surface-2); }
+  .bloco-list-table td {
+    padding: 9px 10px;
+    font-size: 12.5px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .bloco-list-table td.list-date { color: var(--faint); font-size: 11.5px; white-space: nowrap; }
+  .bloco-list-table td.list-asset { font-weight: 600; }
+  .bloco-list-table td.list-result { text-align: right; font-weight: 700; letter-spacing: -.2px; }
+  .bloco-list-table td.list-result.pos { color: var(--green); }
+  .bloco-list-table td.list-result.neg { color: var(--red); }
+  .bloco-list-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .bloco-list-badge.take { background: var(--green-bg); color: var(--green); }
+  .bloco-list-badge.stop { background: var(--red-bg); color: var(--red); }
 
   /* ── Table ──────────────────────────────────────────────── */
   .table-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
@@ -1180,7 +1270,7 @@
   .bloco-equity-wrap {
     position: relative;
     width: 100%;
-    height: 110px;
+    height: 200px;
   }
 
   /* grid de cards */
@@ -1194,7 +1284,7 @@
   }
   .bloco-cards-grid {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 8px;
   }
 
@@ -1203,10 +1293,13 @@
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--r);
-    padding: 10px 12px;
+    padding: 10px 10px;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 4px;
+    height: 100px;
+    box-sizing: border-box;
     transition: border-color var(--t), transform var(--t), box-shadow var(--t);
     cursor: pointer;
     position: relative;
@@ -1229,6 +1322,7 @@
     font-weight: 500;
     letter-spacing: .4px;
     text-transform: uppercase;
+    text-align: center;
   }
   .op-card-asset {
     font-size: 10.5px;
@@ -1237,6 +1331,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: center;
   }
   .op-card-result {
     font-size: 14px;
@@ -1244,6 +1339,7 @@
     letter-spacing: -.3px;
     line-height: 1;
     margin-top: 2px;
+    text-align: center;
   }
   .op-card.take .op-card-result { color: var(--green); }
   .op-card.stop .op-card-result { color: var(--red); }
@@ -1252,6 +1348,7 @@
     font-size: 10.5px;
     font-weight: 500;
     letter-spacing: .1px;
+    text-align: center;
   }
   .op-card.take .op-card-pct { color: var(--green-dim); }
   .op-card.stop .op-card-pct { color: var(--red-dim); }
@@ -1270,7 +1367,32 @@
   .op-card.take .op-card-type { background: var(--green-bg); color: var(--green); }
   .op-card.stop .op-card-type { background: var(--red-bg);   color: var(--red); }
 
-  /* bloco em construção (< 25 ops) */
+  /* card vazio — slot disponível para nova operação */
+  .op-card.op-card-empty {
+    border-style: dashed;
+    border-color: var(--border);
+    background: transparent;
+    align-items: center;
+    justify-content: center;
+  }
+  .op-card.op-card-empty::before { display: none; }
+  .op-card.op-card-empty:hover {
+    border-color: var(--border-focus);
+    background: var(--surface-2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0,0,0,.3);
+  }
+  .op-card-add {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--faint);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1;
+    transition: color var(--t);
+  }
+  .op-card.op-card-empty:hover .op-card-add { color: var(--text); }
   .bloco-progress-bar {
     height: 3px;
     background: var(--surface-3);
@@ -1380,7 +1502,7 @@
     .bstat { min-width: 52px; }
     .bstat-value { font-size: 15px; }
     .bloco-body { padding: 14px 14px; gap:16px; }
-    .bloco-cards-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .bloco-cards-grid { grid-template-columns: repeat(7, 1fr); gap: 6px; }
     .op-card { padding: 7px 8px; gap: 3px; }
     .op-card-result { font-size: 11px; }
     .op-card-asset { font-size: 9px; }
@@ -1392,10 +1514,10 @@
     .diario-sum-value { font-size: 16px; }
     .diario-selector-row { gap: 6px; }
     .bloco-sel-btn { font-size: 11px; padding: 6px 10px; }
-    .bloco-equity-wrap { height: 80px; }
+    .bloco-equity-wrap { height: 130px; }
   }
   @media(max-width:400px){
-    .bloco-cards-grid { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .bloco-cards-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
     .diario-summary { grid-template-columns: repeat(2, 1fr); }
     .bloco-stats { gap: 8px; }
   }
@@ -1919,7 +2041,7 @@
           </div>
         </div>
       </div>
-      <div class="form-group"><label>Observação</label><input type="text" id="e-notes"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Notas da operação</label><textarea id="e-notes" style="min-height:110px;height:110px;resize:vertical;width:100%;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;font-family:inherit;line-height:1.6;outline:none;transition:border-color var(--t),background var(--t);" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'"></textarea></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveTrade()">Salvar</button>
@@ -2632,7 +2754,7 @@ function renderTable() {
       <th style="cursor:pointer;user-select:none;${dateActive?'color:var(--text)':''}" onclick="_tableSort='date_desc';renderTable()" title="Ordenar por data">Data${dateActive?' ↓':''}</th>
       <th>Mercado</th><th>Ativo</th><th>Direção</th>
       <th class="th-sort-result" onclick="toggleResultSort()" title="Ordenar por resultado">Resultado<span class="sort-icon">${sortIcon}</span></th>
-      <th>Estratégia</th><th>Gatilho</th><th>TF</th><th>Obs.</th><th></th>
+      <th>Estratégia</th><th>Gatilho</th><th>TF</th><th>Notas da operação</th><th></th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -2640,7 +2762,9 @@ function renderTable() {
    DIÁRIO DE TRADING
    ═══════════════════════════════════════════════════════════════ */
 
-const DIARIO_BLOCK_SIZE = 25;
+const DIARIO_BLOCK_SIZE = 35;
+const DIARIO_CYCLE_SIZE  = 20;
+let   _diarioView        = 'grid'; // 'grid' | 'list'
 const _diarioCharts = {}; // chart instances per bloco
 let _diarioBlocks  = []; // blocos actuais (para o seletor reutilizar)
 let _diarioCapital = 0;  // capital no momento do último render
@@ -2697,14 +2821,11 @@ function renderDiario() {
 
   html += `<div class="diario-summary">
     <div class="diario-sum-card">
-      <div class="diario-sum-label">Operações nos Blocos</div>
+      <div class="diario-sum-label">Operações Registradas</div>
       <div class="diario-sum-value neutral">${blockTrades.length}</div>
       ${excludedCount > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">${excludedCount} excluída(s) &lt;$1</div>` : ''}
     </div>
-    <div class="diario-sum-card">
-      <div class="diario-sum-label">Blocos</div>
-      <div class="diario-sum-value neutral">${blocks.length}</div>
-    </div>
+
     <div class="diario-sum-card">
       <div class="diario-sum-label">Win Rate Global</div>
       <div class="diario-sum-value ${parseFloat(totalWR)>=50?'pos':'neg'}">${totalWR}%</div>
@@ -2791,20 +2912,52 @@ function _renderBlocoDetail(bi) {
   let cardsHtml = '';
   const globalStartIdx = (bi - 1) * DIARIO_BLOCK_SIZE;
   block.forEach((t, ci) => {
-    const globalNum = globalStartIdx + ci + 1;
     const isWin  = t.result > 0;
     const type   = isWin ? 'take' : 'stop';
     const pct    = capital > 0 ? (t.result / capital * 100) : null;
     const pctStr = pct !== null ? `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%` : '';
+    const cardDate = t.date ? t.date.split('-').reverse().join('/') : '\u2014';
     cardsHtml += `
       <div class="op-card ${type}" title="${t.asset} \u2022 ${t.date}" onclick="openOpDetail('${t.id}')">
-        <div class="op-card-num">#${globalNum}</div>
+        <div class="op-card-num">${cardDate}</div>
         <div class="op-card-asset">${t.asset || '\u2014'}</div>
         <div class="op-card-result">${fmt(t.result)}</div>
         ${pctStr ? `<div class="op-card-pct">${pctStr}</div>` : ''}
         <div class="op-card-type">${isWin ? 'Take' : 'Stop'}</div>
       </div>`;
   });
+
+  // Build list view HTML
+  let listHtml = `<table class="bloco-list-table">
+    <thead><tr>
+      <th>#</th><th>Data</th><th>Ativo</th><th>Direção</th><th>Estratégia</th><th>Resultado</th>
+    </tr></thead><tbody>`;
+  block.forEach((t, ci) => {
+    const isWin = t.result > 0;
+    const d = t.date ? t.date.split('-').reverse().join('/') : '—';
+    const strat = Array.isArray(t.strategy) ? t.strategy.join(', ') : (t.strategy || '—');
+    listHtml += `<tr onclick="openOpDetail('${t.id}')">
+      <td class="list-date">${ci + 1}</td>
+      <td class="list-date">${d}</td>
+      <td class="list-asset">${t.asset || '—'}</td>
+      <td><span class="bloco-list-badge ${isWin ? 'take' : 'stop'}">${t.dir || (isWin ? 'Take' : 'Stop')}</span></td>
+      <td style="font-size:11.5px;color:var(--muted)">${strat}</td>
+      <td class="list-result ${isWin ? 'pos' : 'neg'}">${fmt(t.result)}</td>
+    </tr>`;
+  });
+  listHtml += '</tbody></table>';
+
+  // Slots vazios para o bloco em andamento
+  if (isLast) {
+    const remaining = DIARIO_BLOCK_SIZE - block.length;
+    for (let e = 0; e < remaining; e++) {
+      const emptyNum = globalStartIdx + block.length + e + 1;
+      cardsHtml += `
+        <div class="op-card op-card-empty" title="Registrar nova operação" onclick="toggleForm()">
+          <div class="op-card-add">TRADE +</div>
+        </div>`;
+    }
+  }
 
   const pctProg = (block.length / DIARIO_BLOCK_SIZE * 100).toFixed(0);
   const inProgressHtml = isLast ? `
@@ -2854,22 +3007,61 @@ function _renderBlocoDetail(bi) {
         <div class="bloco-equity-wrap"><canvas id="${canvasId}"></canvas></div>
       </div>
       <div>
-        <div class="bloco-cards-label">Operações</div>
-        <div class="bloco-cards-grid">${cardsHtml}</div>
+        <div class="bloco-cards-topbar">
+          <div class="bloco-view-toggle">
+            <button class="bloco-view-btn ${_diarioView==='grid'?'active':''}" onclick="setDiarioView('grid')">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/>
+                <rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/>
+              </svg>
+              Grid Visual
+            </button>
+            <button class="bloco-view-btn ${_diarioView==='list'?'active':''}" onclick="setDiarioView('list')">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="1" y1="3.5" x2="13" y2="3.5"/><line x1="1" y1="7" x2="13" y2="7"/>
+                <line x1="1" y1="10.5" x2="13" y2="10.5"/>
+              </svg>
+              Lista
+            </button>
+          </div>
+          <div class="bloco-counter">Bloco ${((bi-1) % DIARIO_CYCLE_SIZE) + 1} de ${DIARIO_CYCLE_SIZE} (Ciclo ${Math.ceil(bi/DIARIO_CYCLE_SIZE)})</div>
+        </div>
+        <div id="bloco-cards-container">
+          <div class="bloco-cards-grid" style="display:${_diarioView==='grid'?'grid':'none'}">${cardsHtml}</div>
+          <div class="bloco-list-wrap" style="display:${_diarioView==='list'?'block':'none'}">${listHtml}</div>
+        </div>
       </div>
     </div>
   </div>`;
 
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+
   let acc = 0;
   const vals   = block.map(t => { acc += t.result; return parseFloat(acc.toFixed(2)); });
-  const labels = block.map((_, i) => `#${(bi-1)*DIARIO_BLOCK_SIZE + i + 1}`);
+  const labels = block.map((_, i) => {
+    const d = block[i].date ? block[i].date.split('-').reverse().slice(0,2).join('/') : `#${i+1}`;
+    return d;
+  });
+
   const finalVal  = vals[vals.length - 1] || 0;
-  const colorMain = finalVal >= 0 ? 'rgba(92,184,122,1)' : 'rgba(224,112,112,1)';
+  const isPos     = finalVal >= 0;
+  const colorMain = isPos ? 'rgba(92,184,122,1)' : 'rgba(224,112,112,1)';
+  const colorDim  = isPos ? 'rgba(92,184,122,0.15)' : 'rgba(224,112,112,0.15)';
+
+  // Y-axis: add breathing room so line never hugs the edges
+  const minVal = Math.min(0, ...vals);
+  const maxVal = Math.max(0, ...vals);
+  const range  = maxVal - minVal || 10;
+  const pad    = range * 0.28;
+  const yMin   = Math.floor(minVal - pad);
+  const yMax   = Math.ceil(maxVal + pad);
+
   const ctx  = canvas.getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 0, 110);
-  grad.addColorStop(0, finalVal >= 0 ? 'rgba(92,184,122,0.25)' : 'rgba(224,112,112,0.25)');
+  const chartH = 200;
+  const grad = ctx.createLinearGradient(0, 0, 0, chartH);
+  grad.addColorStop(0, isPos ? 'rgba(92,184,122,0.30)' : 'rgba(224,112,112,0.30)');
+  grad.addColorStop(0.6, isPos ? 'rgba(92,184,122,0.06)' : 'rgba(224,112,112,0.06)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
 
   _diarioCharts['active'] = new Chart(canvas, {
@@ -2881,9 +3073,10 @@ function _renderBlocoDetail(bi) {
         borderColor: colorMain,
         borderWidth: 2,
         backgroundColor: grad,
-        pointRadius: 3,
-        pointHoverRadius: 5,
+        pointRadius: vals.length <= 20 ? 3.5 : vals.length <= 40 ? 2.5 : 0,
+        pointHoverRadius: 6,
         pointBackgroundColor: colorMain,
+        pointBorderColor: 'transparent',
         fill: true,
         tension: 0.4
       }]
@@ -2891,39 +3084,70 @@ function _renderBlocoDetail(bi) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 400, easing: 'easeOutQuart' },
+      animation: { duration: 500, easing: 'easeOutCubic' },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(14,17,23,.95)',
-          borderColor: 'rgba(255,255,255,.1)',
+          backgroundColor: 'rgba(14,17,23,.96)',
+          borderColor: 'rgba(255,255,255,.12)',
           borderWidth: 1,
-          titleColor: '#7a8494',
+          titleColor: '#8e99ac',
           bodyColor: '#e4e8f0',
-          padding: 10,
+          padding: 12,
+          caretSize: 5,
           callbacks: {
-            title: ctx => `Opera\u00e7\u00e3o ${ctx[0].label}`,
-            label: ctx => {
-              const v = ctx.parsed.y;
-              return ' ' + (v >= 0 ? '+' : '') + '$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+            title: c => `Trade ${c[0].label}`,
+            label: c => {
+              const v = c.parsed.y;
+              return '  ' + (v >= 0 ? '+' : '') + '$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
             }
           }
         }
       },
       scales: {
-        x: { display: false, grid: { display: false } },
+        x: {
+          display: true,
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            color: 'rgba(142,153,172,0.5)',
+            font: { size: 9 },
+            maxTicksLimit: 8,
+            maxRotation: 0
+          }
+        },
         y: {
           display: true,
           position: 'right',
-          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-          ticks: { color: '#3d4455', font: { size: 10 }, maxTicksLimit: 4, callback: v => (v >= 0 ? '+' : '') + v.toFixed(0) },
-          border: { display: false }
+          min: yMin,
+          max: yMax,
+          grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+          border: { display: false, dash: [3,3] },
+          ticks: {
+            color: 'rgba(142,153,172,0.7)',
+            font: { size: 10 },
+            maxTicksLimit: 5,
+            callback: v => (v >= 0 ? '+' : '') + v.toFixed(0)
+          }
         }
       }
     }
   });
 }
 
+
+function setDiarioView(v) {
+  _diarioView = v;
+  const grid = document.querySelector('#bloco-cards-container .bloco-cards-grid');
+  const list = document.querySelector('#bloco-cards-container .bloco-list-wrap');
+  if (grid) grid.style.display = v === 'grid' ? 'grid' : 'none';
+  if (list) list.style.display = v === 'list' ? 'block' : 'none';
+  document.querySelectorAll('.bloco-view-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bloco-view-btn').forEach(b => {
+    if ((v === 'grid' && b.textContent.includes('Grid')) ||
+        (v === 'list' && b.textContent.includes('Lista'))) b.classList.add('active');
+  });
+}
 function renderTopAssets() {
   const data = getFiltered();
   const el   = document.getElementById('top-assets-list');
@@ -4218,7 +4442,7 @@ function openOpDetail(id) {
         </div>
         ${t.notes ? `
         <div class="op-detail-row obs">
-          <span class="op-detail-row-label">Observação</span>
+          <span class="op-detail-row-label">Notas da operação</span>
           <span class="op-detail-row-value obs-text">${t.notes}</span>
         </div>` : ''}
       </div>
@@ -4344,9 +4568,12 @@ async function deleteTrade(id) {
           </div>
         </div>
       </div>
-      <div class="form-group"><label>Observação</label><input type="text" id="f-notes" placeholder="opcional"></div>
     </div>
-    <div class="form-actions" style="margin-top:20px">
+    <div class="ntd-notes-group">
+      <label style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:500;">Notas da operação</label>
+      <textarea id="f-notes" placeholder="Descreva seu racional, contexto do trade, emoções, erros ou acertos..."></textarea>
+    </div>
+    <div class="ntd-form-actions">
       <button class="btn btn-primary" onclick="addTrade()">Registrar</button>
       <button class="btn" onclick="closeNewTradeDialog()">Cancelar</button>
     </div>
