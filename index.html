@@ -1325,9 +1325,10 @@
     text-align: center;
   }
   .op-card-asset {
-    font-size: 10.5px;
-    color: var(--muted);
-    font-weight: 500;
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 700;
+    letter-spacing: .2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2919,10 +2920,10 @@ function _renderBlocoDetail(bi) {
     const cardDate = t.date ? t.date.split('-').reverse().join('/') : '\u2014';
     cardsHtml += `
       <div class="op-card ${type}" title="${t.asset} \u2022 ${t.date}" onclick="openOpDetail('${t.id}')">
-        <div class="op-card-num">${cardDate}</div>
         <div class="op-card-asset">${t.asset || '\u2014'}</div>
         <div class="op-card-result">${fmt(t.result)}</div>
         ${pctStr ? `<div class="op-card-pct">${pctStr}</div>` : ''}
+        <div class="op-card-num">${cardDate}</div>
         <div class="op-card-type">${isWin ? 'Take' : 'Stop'}</div>
       </div>`;
   });
@@ -3037,32 +3038,33 @@ function _renderBlocoDetail(bi) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
 
+  // Build cumulative values starting from 0 (Start point)
   let acc = 0;
-  const vals   = block.map(t => { acc += t.result; return parseFloat(acc.toFixed(2)); });
-  const labels = block.map((_, i) => {
-    const d = block[i].date ? block[i].date.split('-').reverse().slice(0,2).join('/') : `#${i+1}`;
-    return d;
-  });
+  const cumulativeVals = block.map(t => { acc += t.result; return parseFloat(acc.toFixed(2)); });
+  const vals   = [0, ...cumulativeVals];
+  const labels = ['Start', ...block.map((_, i) => String(i + 1))];
 
-  const finalVal  = vals[vals.length - 1] || 0;
+  const finalVal  = cumulativeVals[cumulativeVals.length - 1] || 0;
   const isPos     = finalVal >= 0;
   const colorMain = isPos ? 'rgba(92,184,122,1)' : 'rgba(224,112,112,1)';
-  const colorDim  = isPos ? 'rgba(92,184,122,0.15)' : 'rgba(224,112,112,0.15)';
 
-  // Y-axis: add breathing room so line never hugs the edges
-  const minVal = Math.min(0, ...vals);
-  const maxVal = Math.max(0, ...vals);
-  const range  = maxVal - minVal || 10;
-  const pad    = range * 0.28;
-  const yMin   = Math.floor(minVal - pad);
-  const yMax   = Math.ceil(maxVal + pad);
+  // Y-axis: nice round step, good breathing room
+  const minVal  = Math.min(0, ...vals);
+  const maxVal  = Math.max(0, ...vals);
+  const rawRange = maxVal - minVal || 10;
+  const rawStep  = rawRange / 4;
+  // Round step to a "nice" number
+  const mag   = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const niceStep = Math.ceil(rawStep / mag) * mag || 1;
+  const yMin  = Math.floor(minVal / niceStep) * niceStep - niceStep;
+  const yMax  = Math.ceil(maxVal  / niceStep) * niceStep + niceStep;
 
   const ctx  = canvas.getContext('2d');
   const chartH = 200;
   const grad = ctx.createLinearGradient(0, 0, 0, chartH);
-  grad.addColorStop(0, isPos ? 'rgba(92,184,122,0.30)' : 'rgba(224,112,112,0.30)');
+  grad.addColorStop(0,   isPos ? 'rgba(92,184,122,0.30)' : 'rgba(224,112,112,0.30)');
   grad.addColorStop(0.6, isPos ? 'rgba(92,184,122,0.06)' : 'rgba(224,112,112,0.06)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  grad.addColorStop(1,   'rgba(0,0,0,0)');
 
   _diarioCharts['active'] = new Chart(canvas, {
     type: 'line',
@@ -3073,8 +3075,8 @@ function _renderBlocoDetail(bi) {
         borderColor: colorMain,
         borderWidth: 2,
         backgroundColor: grad,
-        pointRadius: vals.length <= 20 ? 3.5 : vals.length <= 40 ? 2.5 : 0,
-        pointHoverRadius: 6,
+        pointRadius: ctx2 => ctx2.dataIndex === 0 ? 0 : (vals.length <= 22 ? 3.5 : vals.length <= 42 ? 2.5 : 0),
+        pointHoverRadius: ctx2 => ctx2.dataIndex === 0 ? 0 : 6,
         pointBackgroundColor: colorMain,
         pointBorderColor: 'transparent',
         fill: true,
@@ -3088,18 +3090,19 @@ function _renderBlocoDetail(bi) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          filter: item => item.dataIndex > 0,
           backgroundColor: 'rgba(14,17,23,.96)',
           borderColor: 'rgba(255,255,255,.12)',
           borderWidth: 1,
           titleColor: '#8e99ac',
-          bodyColor: '#e4e8f0',
-          padding: 12,
+          bodyColor: colorMain,
+          padding: 14,
           caretSize: 5,
           callbacks: {
-            title: c => `Trade ${c[0].label}`,
+            title: c => `Trade #${c[0].label}`,
             label: c => {
               const v = c.parsed.y;
-              return '  ' + (v >= 0 ? '+' : '') + '$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+              return '  Acumulado : $' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
             }
           }
         }
@@ -3110,24 +3113,27 @@ function _renderBlocoDetail(bi) {
           grid: { display: false },
           border: { display: false },
           ticks: {
-            color: 'rgba(142,153,172,0.5)',
-            font: { size: 9 },
-            maxTicksLimit: 8,
-            maxRotation: 0
+            color: 'rgba(142,153,172,0.55)',
+            font: { size: 10 },
+            maxTicksLimit: 12,
+            maxRotation: 0,
+            padding: 6
           }
         },
         y: {
           display: true,
-          position: 'right',
+          position: 'left',
           min: yMin,
           max: yMax,
-          grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
-          border: { display: false, dash: [3,3] },
+          stepSize: niceStep,
+          grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false, drawTicks: false },
+          border: { display: false },
           ticks: {
-            color: 'rgba(142,153,172,0.7)',
+            color: 'rgba(142,153,172,0.65)',
             font: { size: 10 },
-            maxTicksLimit: 5,
-            callback: v => (v >= 0 ? '+' : '') + v.toFixed(0)
+            maxTicksLimit: 6,
+            padding: 8,
+            callback: v => '$' + v.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0})
           }
         }
       }
