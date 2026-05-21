@@ -2266,8 +2266,8 @@
   FIREBASE CONFIG — substitua os valores abaixo.
 ================================================================ -->
 <script type="module">
-import { initializeApp }                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, remove, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { initializeApp }                                         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, remove, update, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB5OZAQ6u0erUdCBiIMPQRS_jFZII3_bQM",
@@ -2282,31 +2282,77 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
+/* ── Paths ──────────────────────────────────────────────────── */
+function _tradesPath(id)   { return id === 'default' ? 'trades'                  : `accounts/${id}/trades`; }
+function _settingsPath(id) { return id === 'default' ? 'settings/initialBalance' : `accounts/${id}/settings/initialBalance`; }
+function _settingsNode(id) { return id === 'default' ? 'settings'                : `accounts/${id}/settings`; }
+
+/* ── 1. REGISTRO DE CONTAS — sincronizado via Firebase ─────── */
+// Ouve accountsRegistry em tempo real; qualquer dispositivo que
+// crie/edite/exclua uma conta atualiza todos os outros ao vivo.
+onValue(ref(db, 'accountsRegistry'), (snap) => {
+  const raw = snap.val() || {};
+  let accounts = Object.values(raw);
+
+  // Garante que a conta padrão sempre existe
+  if (!accounts.find(a => a.id === 'default')) {
+    accounts.unshift({ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a', createdAt: 0 });
+  }
+
+  // Ordena: default primeiro, depois por createdAt
+  accounts.sort((a, b) => {
+    if (a.id === 'default') return -1;
+    if (b.id === 'default') return  1;
+    return (a.createdAt || 0) - (b.createdAt || 0);
+  });
+
+  // Cache local como fallback offline
+  window._cachedAccounts = accounts;
+  try { localStorage.setItem('td_accounts_cache', JSON.stringify(accounts)); } catch(e) {}
+
+  // Atualiza o seletor em todos os dispositivos ao vivo
+  if (typeof renderAccountSelector === 'function') renderAccountSelector();
+
+  // Sinaliza que o registro chegou (init aguarda isso)
+  if (typeof _onAccountsReady === 'function') _onAccountsReady(accounts);
+});
+
+/* ── Seed: garante conta default no Firebase (migração) ────── */
+// Verifica uma vez se accountsRegistry/default existe; se não, cria.
+onValue(ref(db, 'accountsRegistry/default'), (snap) => {
+  if (!snap.exists()) {
+    set(ref(db, 'accountsRegistry/default'), {
+      id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a', createdAt: 0
+    });
+  }
+}, { onlyOnce: true });
+
+/* ── CRUD de contas → Firebase ─────────────────────────────── */
+window._fbSaveAccount   = (id, data) => set(ref(db, 'accountsRegistry/' + id), data);
+window._fbDeleteAccount = (id)       => remove(ref(db, 'accountsRegistry/' + id));
+
+/* ── 2. TRADES — listener por conta ────────────────────────── */
 let _tradesUnsub   = null;
 let _settingsUnsub = null;
 
-function _tradesPath(id)   { return id === 'default' ? 'trades'                            : `accounts/${id}/trades`; }
-function _settingsPath(id) { return id === 'default' ? 'settings/initialBalance'           : `accounts/${id}/settings/initialBalance`; }
-function _settingsNode(id) { return id === 'default' ? 'settings'                          : `accounts/${id}/settings`; }
-
 function subscribeToAccount(accountId) {
-  // Unsubscribe previous listeners
   if (_tradesUnsub)   { try { _tradesUnsub();   } catch(e){} _tradesUnsub   = null; }
   if (_settingsUnsub) { try { _settingsUnsub(); } catch(e){} _settingsUnsub = null; }
 
   const tPath = _tradesPath(accountId);
   const tRef  = ref(db, tPath);
 
-  // Wire up write functions for this account
-  window._fbPush       = (data) => push(tRef, data);
-  window._fbRemove     = (id)   => remove(ref(db, tPath + '/' + id));
+  window._fbPush       = (data)     => push(tRef, data);
+  window._fbRemove     = (id)       => remove(ref(db, tPath + '/' + id));
   window._fbUpdate     = (id, data) => update(ref(db, tPath + '/' + id), data);
-  window._fbSetBalance = (val)  => update(ref(db, _settingsNode(accountId)), { initialBalance: val });
+  window._fbSetBalance = (val)      => update(ref(db, _settingsNode(accountId)), { initialBalance: val });
 
   _tradesUnsub = onValue(tRef, (snap) => {
     const raw = snap.val() || {};
     trades = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
-    setStatus('on', 'Conectado · ' + trades.length + ' operações');
+    const acct = (window._cachedAccounts || []).find(a => a.id === accountId);
+    const label = acct ? acct.name : accountId;
+    setStatus('on', label + ' · ' + trades.length + ' ops');
     if (!window._tabRestored) { window._tabRestored = true; restoreTab(); }
     buildMonthChips();
     renderAll();
@@ -2317,23 +2363,14 @@ function subscribeToAccount(accountId) {
 
   _settingsUnsub = onValue(ref(db, _settingsPath(accountId)), (snap) => {
     const val = snap.val();
-    if (val !== null) {
-      initialBalance = parseFloat(val) || 0;
-      const input = document.getElementById('initial-balance-input');
-      if (input && document.activeElement !== input) input.value = initialBalance || '';
-      renderKPIs();
-    } else {
-      initialBalance = 0;
-      const input = document.getElementById('initial-balance-input');
-      if (input && document.activeElement !== input) input.value = '';
-      renderKPIs();
-    }
+    initialBalance = val !== null ? (parseFloat(val) || 0) : 0;
+    const input = document.getElementById('initial-balance-input');
+    if (input && document.activeElement !== input) input.value = initialBalance || '';
+    renderKPIs();
   });
 }
 
 window._subscribeToAccount = subscribeToAccount;
-
-// Initial subscription is triggered by the account system after DOM is ready
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -2343,29 +2380,27 @@ let charts         = {};
 let initialBalance = 0;
 
 /* ══════════════════════════════════════════════════════════════
-   SISTEMA MULTI-CONTA
+   SISTEMA MULTI-CONTA — Firebase como fonte de verdade
+   O registro de contas fica em accountsRegistry/ no Firebase.
+   Todos os dispositivos vêem as mesmas contas em tempo real.
    ══════════════════════════════════════════════════════════════ */
-const ACCT_COLORS = ['#5cb87a','#6fa8d4','#d4963a','#9e97d8','#e07070','#4ab89a','#f0a830','#b39dff'];
-const ACCT_STORAGE_KEY   = 'td_accounts_v2';
-const ACCT_ACTIVE_KEY    = 'td_active_account';
+const ACCT_COLORS    = ['#5cb87a','#6fa8d4','#d4963a','#9e97d8','#e07070','#4ab89a','#f0a830','#b39dff'];
+const ACCT_ACTIVE_KEY = 'td_active_account'; // per-device, fica em localStorage
 
-function _defaultAccounts() {
-  return [{ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a' }];
-}
-
+/* ── Leitura do cache (populado pelo onValue do Firebase) ───── */
 function loadAccounts() {
+  // Prioridade: cache em memória (Firebase) → localStorage fallback → default
+  if (window._cachedAccounts && window._cachedAccounts.length) {
+    return window._cachedAccounts;
+  }
   try {
-    const raw = localStorage.getItem(ACCT_STORAGE_KEY);
+    const raw = localStorage.getItem('td_accounts_cache');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length) return parsed;
     }
   } catch(e) {}
-  return _defaultAccounts();
-}
-
-function saveAccounts(accounts) {
-  try { localStorage.setItem(ACCT_STORAGE_KEY, JSON.stringify(accounts)); } catch(e) {}
+  return [{ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a', createdAt: 0 }];
 }
 
 function getActiveAccountId() {
@@ -2373,9 +2408,29 @@ function getActiveAccountId() {
 }
 
 function getActiveAccount() {
-  const accounts = loadAccounts();
   const id = getActiveAccountId();
-  return accounts.find(a => a.id === id) || accounts[0];
+  return loadAccounts().find(a => a.id === id) || loadAccounts()[0];
+}
+
+/* ── Callback chamado pelo onValue do Firebase ──────────────── */
+// Definido aqui; o módulo ES chama quando os dados chegam.
+function _onAccountsReady(accounts) {
+  // Na primeira chamada, inicializa a assinatura de trades
+  if (!window._accountsInitialized) {
+    window._accountsInitialized = true;
+    const activeId = getActiveAccountId();
+    const active   = accounts.find(a => a.id === activeId) || accounts[0];
+
+    // Se a conta ativa não existe mais (foi deletada em outro dispositivo), volta ao default
+    if (!active || active.id !== activeId) {
+      try { localStorage.setItem(ACCT_ACTIVE_KEY, 'default'); } catch(e) {}
+    }
+
+    const targetId = active ? active.id : 'default';
+    _setImportVisible((active || accounts[0]).type === 'auto');
+    renderAccountSelector();
+    if (window._subscribeToAccount) window._subscribeToAccount(targetId);
+  }
 }
 
 /* ── Troca de conta ─────────────────────────────────────────── */
@@ -2386,25 +2441,20 @@ function switchAccount(id) {
 
   try { localStorage.setItem(ACCT_ACTIVE_KEY, id); } catch(e) {}
 
-  // Reset global state
   trades         = [];
   initialBalance = 0;
   window._tabRestored = false;
 
   setStatus('', 'Trocando conta...');
-
-  // Ambos os tipos usam Firebase — a diferença é só UI (importar CSV visível ou não)
   _setImportVisible(account.type === 'auto');
 
-  if (window._subscribeToAccount) {
-    window._subscribeToAccount(id);
-  }
+  if (window._subscribeToAccount) window._subscribeToAccount(id);
 
   closeAccountDropdown();
   renderAccountSelector();
 }
 
-/* ── Visibilidade do botão Importar ────────────────────────── */
+/* ── Visibilidade do botão Importar ─────────────────────────── */
 function _setImportVisible(visible) {
   const wrap   = document.getElementById('sidebar-import-wrap');
   const manual = document.getElementById('sidebar-manual-badge');
@@ -2414,33 +2464,32 @@ function _setImportVisible(visible) {
   if (fabImp) fabImp.style.display = visible ? '' : 'none';
 }
 
-/* ── Render sidebar account selector ──────────────────────── */
+/* ── Render seletor sidebar ─────────────────────────────────── */
 function renderAccountSelector() {
   const accounts = loadAccounts();
   const activeId = getActiveAccountId();
   const active   = accounts.find(a => a.id === activeId) || accounts[0];
+  if (!active) return;
 
-  // Header pill
-  const dotEl   = document.getElementById('acct-active-dot');
-  const nameEl  = document.getElementById('acct-active-name');
+  const dotEl    = document.getElementById('acct-active-dot');
+  const nameEl   = document.getElementById('acct-active-name');
   const typeIcon = document.getElementById('acct-active-type-icon');
   const typeLbl  = document.getElementById('acct-active-type-label');
 
-  if (dotEl)   dotEl.style.background   = active.color || '#5cb87a';
-  if (nameEl)  nameEl.textContent        = active.name;
-  if (typeIcon) typeIcon.textContent     = active.type === 'auto' ? '🔄' : '✏️';
-  if (typeLbl)  typeLbl.textContent      = active.type === 'auto' ? 'Automática' : 'Manual';
+  if (dotEl)    dotEl.style.background = active.color || '#5cb87a';
+  if (nameEl)   nameEl.textContent     = active.name;
+  if (typeIcon) typeIcon.textContent   = active.type === 'auto' ? '🔄' : '✏️';
+  if (typeLbl)  typeLbl.textContent    = active.type === 'auto' ? 'Automática' : 'Manual';
 
-  // Dropdown list
   const listEl = document.getElementById('acct-list');
   if (!listEl) return;
 
   listEl.innerHTML = accounts.map(a => {
-    const isActive = a.id === activeId;
-    const typeBadge = a.type === 'auto'
+    const isActive   = a.id === activeId;
+    const typeBadge  = a.type === 'auto'
       ? `<span class="badge badge-auto">Auto</span>`
       : `<span class="badge badge-manual">Manual</span>`;
-    const canDelete = a.id !== 'default';
+    const canDelete  = a.id !== 'default';
     return `
     <div class="acct-item${isActive ? ' active' : ''}" onclick="switchAccount('${a.id}')">
       <div class="acct-item-dot" style="background:${a.color || '#5cb87a'}"></div>
@@ -2457,19 +2506,17 @@ function renderAccountSelector() {
   }).join('');
 }
 
-/* ── Dropdown toggle ─────────────────────────────────────── */
+/* ── Dropdown toggle ─────────────────────────────────────────── */
 function toggleAccountDropdown(e) {
   if (e) e.stopPropagation();
   const dd  = document.getElementById('acct-dropdown');
   const chv = document.getElementById('acct-chevron');
-  const isOpen = dd.style.display !== 'none';
-  if (isOpen) {
+  if (dd.style.display !== 'none') {
     closeAccountDropdown();
   } else {
     dd.style.display = '';
     if (chv) chv.classList.add('open');
     renderAccountSelector();
-    // Click outside to close
     setTimeout(() => document.addEventListener('click', _acctOutsideClick), 0);
   }
 }
@@ -2487,19 +2534,19 @@ function _acctOutsideClick(e) {
   if (sel && !sel.contains(e.target)) closeAccountDropdown();
 }
 
-/* ── CRUD ─────────────────────────────────────────────────── */
+/* ── CRUD — todas as escritas vão para Firebase ─────────────── */
 let _editingAccountId = null;
 let _newAcctType      = 'auto';
 let _newAcctColor     = ACCT_COLORS[0];
 
 function openAddAccountModal(editId) {
   _editingAccountId = editId || null;
-  _newAcctType      = 'auto';
-  _newAcctColor     = ACCT_COLORS[0];
+  _newAcctType  = 'auto';
+  _newAcctColor = ACCT_COLORS[0];
 
-  const modal    = document.getElementById('addAccountModal');
-  const titleEl  = document.getElementById('acct-modal-title');
-  const nameEl   = document.getElementById('new-acct-name');
+  const modal     = document.getElementById('addAccountModal');
+  const titleEl   = document.getElementById('acct-modal-title');
+  const nameEl    = document.getElementById('new-acct-name');
   const createBtn = document.getElementById('acct-create-btn');
   const typeGrid  = document.getElementById('acct-type-grid');
 
@@ -2507,12 +2554,11 @@ function openAddAccountModal(editId) {
     const acct = loadAccounts().find(a => a.id === editId);
     titleEl.textContent   = 'Editar Conta';
     nameEl.value          = acct ? acct.name : '';
-    _newAcctType          = acct ? acct.type : 'auto';
+    _newAcctType          = acct ? acct.type  : 'auto';
     _newAcctColor         = acct ? (acct.color || ACCT_COLORS[0]) : ACCT_COLORS[0];
     createBtn.textContent = 'Salvar';
-    // Lock type for existing accounts
     if (typeGrid) typeGrid.querySelectorAll('.acct-type-card').forEach(c => {
-      c.style.pointerEvents = 'none'; c.style.opacity = '.55';
+      c.style.pointerEvents = 'none'; c.style.opacity = '.5';
     });
   } else {
     titleEl.textContent   = 'Nova Conta';
@@ -2538,7 +2584,6 @@ function closeAddAccountModal(e) {
 function selectAccountType(type) {
   _newAcctType = type;
   _renderAcctTypeCards();
-  validateAccountForm();
 }
 
 function _renderAcctTypeCards() {
@@ -2552,8 +2597,7 @@ function _renderAcctColorPicker() {
   if (!row) return;
   row.innerHTML = ACCT_COLORS.map(c =>
     `<div class="acct-color-swatch${c === _newAcctColor ? ' selected' : ''}"
-          style="background:${c}"
-          onclick="_pickAcctColor('${c}')" title="${c}"></div>`
+          style="background:${c}" onclick="_pickAcctColor('${c}')" title="${c}"></div>`
   ).join('');
 }
 
@@ -2570,31 +2614,40 @@ function validateAccountForm() {
 
 function saveAccountModal() {
   const name = (document.getElementById('new-acct-name')?.value || '').trim();
-  if (!name) return;
-
-  const accounts = loadAccounts();
+  if (!name || !window._fbSaveAccount) return;
 
   if (_editingAccountId) {
-    // Edit existing
-    const idx = accounts.findIndex(a => a.id === _editingAccountId);
-    if (idx !== -1) {
-      accounts[idx].name  = name;
-      accounts[idx].color = _newAcctColor;
-    }
-    saveAccounts(accounts);
-    renderAccountSelector();
+    // Editar: preserva type e createdAt, atualiza nome e cor
+    const existing = loadAccounts().find(a => a.id === _editingAccountId) || {};
+    window._fbSaveAccount(_editingAccountId, {
+      id:        _editingAccountId,
+      name,
+      type:      existing.type || 'auto',
+      color:     _newAcctColor,
+      createdAt: existing.createdAt || 0
+    });
     document.getElementById('addAccountModal').style.display = 'none';
     showToast('Conta atualizada ✓');
     return;
   }
 
-  // Create new
-  const id = 'acct_' + Date.now();
-  accounts.push({ id, name, type: _newAcctType, color: _newAcctColor });
-  saveAccounts(accounts);
+  // Criar nova
+  const id  = 'acct_' + Date.now();
+  const data = { id, name, type: _newAcctType, color: _newAcctColor, createdAt: Date.now() };
+  window._fbSaveAccount(id, data);
   document.getElementById('addAccountModal').style.display = 'none';
   showToast('Conta "' + name + '" criada ✓');
-  switchAccount(id);
+
+  // Troca para a nova conta assim que o onValue confirmar (aguarda cache atualizar)
+  function _waitAndSwitch(attempts) {
+    const exists = (window._cachedAccounts || []).find(a => a.id === id);
+    if (exists) {
+      switchAccount(id);
+    } else if (attempts < 20) {
+      setTimeout(() => _waitAndSwitch(attempts + 1), 150);
+    }
+  }
+  _waitAndSwitch(0);
 }
 
 function renameAccount(id) {
@@ -2604,53 +2657,45 @@ function renameAccount(id) {
 
 function deleteAccount(id) {
   if (id === 'default') return;
-  const accounts = loadAccounts();
-  const acct = accounts.find(a => a.id === id);
+  const acct = loadAccounts().find(a => a.id === id);
   if (!acct) return;
+  if (!confirm(`Excluir a conta "${acct.name}"?\n\nTodos os trades desta conta serão apagados permanentemente do Firebase.`)) return;
 
-  if (!confirm(`Excluir a conta "${acct.name}"?\n\nTodos os dados manuais serão apagados permanentemente.`)) return;
+  if (!window._fbDeleteAccount) return;
+  window._fbDeleteAccount(id);
 
-  const newAccounts = accounts.filter(a => a.id !== id);
-  saveAccounts(newAccounts);
-
-  // Remove manual data if any
-  try { localStorage.removeItem(_manualKey(id)); } catch(e) {}
-  try { localStorage.removeItem(_manualBal(id));  } catch(e) {}
-
-  // If was active, switch to default
   if (getActiveAccountId() === id) {
+    try { localStorage.setItem(ACCT_ACTIVE_KEY, 'default'); } catch(e) {}
     switchAccount('default');
-  } else {
-    renderAccountSelector();
   }
   showToast('Conta excluída');
 }
 
-/* ── Init: run on page load ──────────────────────────────── */
-(function initAccountSystem() {
-  const accounts = loadAccounts();
-  const hasDefault = accounts.some(a => a.id === 'default');
-  if (!hasDefault) {
-    accounts.unshift({ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a' });
-    saveAccounts(accounts);
-  }
+/* ── Init — aguarda o primeiro onValue do accountsRegistry ─── */
+// _onAccountsReady é chamado pelo módulo Firebase quando os dados chegam.
+// Enquanto isso, mostra estado de carregamento.
+window._accountsInitialized = false;
 
-  const activeId = getActiveAccountId();
-  const active   = accounts.find(a => a.id === activeId) || accounts[0];
-
-  renderAccountSelector();
-  _setImportVisible(active.type === 'auto');
-
-  // Ambos os tipos usam Firebase — aguarda o módulo ES registrar _subscribeToAccount
-  function _trySubscribe(attempts) {
-    if (window._subscribeToAccount) {
-      window._subscribeToAccount(active.id);
-    } else if (attempts < 30) {
-      setTimeout(() => _trySubscribe(attempts + 1), 100);
+// Fallback: se o Firebase demorar muito (sem conexão), usa o cache local
+setTimeout(() => {
+  if (!window._accountsInitialized) {
+    const cached = (() => {
+      try {
+        const raw = localStorage.getItem('td_accounts_cache');
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      return null;
+    })();
+    if (cached && cached.length) {
+      window._cachedAccounts = cached;
+      _onAccountsReady(cached);
+    } else {
+      const fallback = [{ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a', createdAt: 0 }];
+      window._cachedAccounts = fallback;
+      _onAccountsReady(fallback);
     }
   }
-  _trySubscribe(0);
-})();
+}, 4000);
 
 /* ══════════════════════════════════════════════════════════════
    SINGLE SOURCE OF TRUTH — Global Filters
