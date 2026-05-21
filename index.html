@@ -362,9 +362,7 @@
     outline: none; border-color: var(--border-focus);
   }
 
-  /* badge tipo manual/auto */
-  .badge-auto   { background: var(--blue-bg);   color: var(--blue);   }
-  .badge-manual { background: var(--amber-bg);  color: var(--amber);  }
+  /* badge tipo manual/auto — removido */
 
   /* ── Tokens invariantes (espaço, sombra, animação) ─────────── */
   :root {
@@ -1724,10 +1722,6 @@
         <div class="acct-dot" id="acct-active-dot" style="background:#5cb87a"></div>
         <div class="acct-info">
           <div class="acct-name" id="acct-active-name">Conta Principal</div>
-          <div class="acct-type-badge" id="acct-active-badge">
-            <span id="acct-active-type-icon">🔄</span>
-            <span id="acct-active-type-label">Automática</span>
-          </div>
         </div>
         <span class="acct-chevron" id="acct-chevron">▾</span>
       </div>
@@ -1780,9 +1774,6 @@
       <div id="sidebar-import-wrap">
         <button class="btn" style="width:100%;font-size:11.5px;padding:7px 10px" onclick="document.getElementById('bybit-file').click()">⬆ Importar CSV</button>
         <input type="file" id="bybit-file" accept=".csv" style="display:none" onchange="handleBybitCSV(event)">
-      </div>
-      <div id="sidebar-manual-badge" style="display:none;padding:6px 10px;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--border);font-size:10.5px;color:var(--muted);text-align:center">
-        ✏️ Registro manual · sincronizado
       </div>
       <button class="btn btn-primary" style="width:100%;font-size:12px;padding:8px 10px" onclick="toggleForm()">+ Nova operação</button>
     </div>
@@ -2296,7 +2287,7 @@ onValue(ref(db, 'accountsRegistry'), (snap) => {
 
   // Garante que a conta padrão sempre existe
   if (!accounts.find(a => a.id === 'default')) {
-    accounts.unshift({ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a', createdAt: 0 });
+    accounts.unshift({ id: 'default', name: 'Conta Principal', color: '#5cb87a', createdAt: 0 });
   }
 
   // Ordena: default primeiro, depois por createdAt
@@ -2322,7 +2313,7 @@ onValue(ref(db, 'accountsRegistry'), (snap) => {
 onValue(ref(db, 'accountsRegistry/default'), (snap) => {
   if (!snap.exists()) {
     set(ref(db, 'accountsRegistry/default'), {
-      id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a', createdAt: 0
+      id: 'default', name: 'Conta Principal', color: '#5cb87a', createdAt: 0
     });
   }
 }, { onlyOnce: true });
@@ -2415,19 +2406,16 @@ function getActiveAccount() {
 /* ── Callback chamado pelo onValue do Firebase ──────────────── */
 // Definido aqui; o módulo ES chama quando os dados chegam.
 function _onAccountsReady(accounts) {
-  // Na primeira chamada, inicializa a assinatura de trades
   if (!window._accountsInitialized) {
     window._accountsInitialized = true;
     const activeId = getActiveAccountId();
     const active   = accounts.find(a => a.id === activeId) || accounts[0];
 
-    // Se a conta ativa não existe mais (foi deletada em outro dispositivo), volta ao default
     if (!active || active.id !== activeId) {
       try { localStorage.setItem(ACCT_ACTIVE_KEY, 'default'); } catch(e) {}
     }
 
     const targetId = active ? active.id : 'default';
-    _setImportVisible((active || accounts[0]).type === 'auto');
     renderAccountSelector();
     if (window._subscribeToAccount) window._subscribeToAccount(targetId);
   }
@@ -2446,22 +2434,11 @@ function switchAccount(id) {
   window._tabRestored = false;
 
   setStatus('', 'Trocando conta...');
-  _setImportVisible(account.type === 'auto');
 
   if (window._subscribeToAccount) window._subscribeToAccount(id);
 
   closeAccountDropdown();
   renderAccountSelector();
-}
-
-/* ── Visibilidade do botão Importar ─────────────────────────── */
-function _setImportVisible(visible) {
-  const wrap   = document.getElementById('sidebar-import-wrap');
-  const manual = document.getElementById('sidebar-manual-badge');
-  const fabImp = document.querySelector('.mobile-fab-import');
-  if (wrap)   wrap.style.display   = visible ? '' : 'none';
-  if (manual) manual.style.display = visible ? 'none' : '';
-  if (fabImp) fabImp.style.display = visible ? '' : 'none';
 }
 
 /* ── Render seletor sidebar ─────────────────────────────────── */
@@ -2473,29 +2450,21 @@ function renderAccountSelector() {
 
   const dotEl    = document.getElementById('acct-active-dot');
   const nameEl   = document.getElementById('acct-active-name');
-  const typeIcon = document.getElementById('acct-active-type-icon');
-  const typeLbl  = document.getElementById('acct-active-type-label');
 
-  if (dotEl)    dotEl.style.background = active.color || '#5cb87a';
-  if (nameEl)   nameEl.textContent     = active.name;
-  if (typeIcon) typeIcon.textContent   = active.type === 'auto' ? '🔄' : '✏️';
-  if (typeLbl)  typeLbl.textContent    = active.type === 'auto' ? 'Automática' : 'Manual';
+  if (dotEl)  dotEl.style.background = active.color || '#5cb87a';
+  if (nameEl) nameEl.textContent     = active.name;
 
   const listEl = document.getElementById('acct-list');
   if (!listEl) return;
 
   listEl.innerHTML = accounts.map(a => {
-    const isActive   = a.id === activeId;
-    const typeBadge  = a.type === 'auto'
-      ? `<span class="badge badge-auto">Auto</span>`
-      : `<span class="badge badge-manual">Manual</span>`;
-    const canDelete  = a.id !== 'default';
+    const isActive  = a.id === activeId;
+    const canDelete = a.id !== 'default';
     return `
     <div class="acct-item${isActive ? ' active' : ''}" onclick="switchAccount('${a.id}')">
       <div class="acct-item-dot" style="background:${a.color || '#5cb87a'}"></div>
       <div class="acct-item-info">
         <div class="acct-item-name">${a.name}</div>
-        <div class="acct-item-meta">${typeBadge}</div>
       </div>
       ${isActive ? '<span class="acct-item-check">✓</span>' : ''}
       <div class="acct-item-actions" onclick="event.stopPropagation()">
@@ -2536,40 +2505,29 @@ function _acctOutsideClick(e) {
 
 /* ── CRUD — todas as escritas vão para Firebase ─────────────── */
 let _editingAccountId = null;
-let _newAcctType      = 'auto';
 let _newAcctColor     = ACCT_COLORS[0];
 
 function openAddAccountModal(editId) {
   _editingAccountId = editId || null;
-  _newAcctType  = 'auto';
   _newAcctColor = ACCT_COLORS[0];
 
   const modal     = document.getElementById('addAccountModal');
   const titleEl   = document.getElementById('acct-modal-title');
   const nameEl    = document.getElementById('new-acct-name');
   const createBtn = document.getElementById('acct-create-btn');
-  const typeGrid  = document.getElementById('acct-type-grid');
 
   if (editId) {
     const acct = loadAccounts().find(a => a.id === editId);
     titleEl.textContent   = 'Editar Conta';
     nameEl.value          = acct ? acct.name : '';
-    _newAcctType          = acct ? acct.type  : 'auto';
     _newAcctColor         = acct ? (acct.color || ACCT_COLORS[0]) : ACCT_COLORS[0];
     createBtn.textContent = 'Salvar';
-    if (typeGrid) typeGrid.querySelectorAll('.acct-type-card').forEach(c => {
-      c.style.pointerEvents = 'none'; c.style.opacity = '.5';
-    });
   } else {
     titleEl.textContent   = 'Nova Conta';
     nameEl.value          = '';
     createBtn.textContent = 'Criar conta';
-    if (typeGrid) typeGrid.querySelectorAll('.acct-type-card').forEach(c => {
-      c.style.pointerEvents = ''; c.style.opacity = '';
-    });
   }
 
-  _renderAcctTypeCards();
   _renderAcctColorPicker();
   validateAccountForm();
   modal.style.display = 'flex';
@@ -2579,17 +2537,6 @@ function openAddAccountModal(editId) {
 function closeAddAccountModal(e) {
   if (e && e.target !== document.getElementById('addAccountModal')) return;
   document.getElementById('addAccountModal').style.display = 'none';
-}
-
-function selectAccountType(type) {
-  _newAcctType = type;
-  _renderAcctTypeCards();
-}
-
-function _renderAcctTypeCards() {
-  document.querySelectorAll('#acct-type-grid .acct-type-card').forEach(c => {
-    c.classList.toggle('selected', c.dataset.type === _newAcctType);
-  });
 }
 
 function _renderAcctColorPicker() {
@@ -2617,12 +2564,10 @@ function saveAccountModal() {
   if (!name || !window._fbSaveAccount) return;
 
   if (_editingAccountId) {
-    // Editar: preserva type e createdAt, atualiza nome e cor
     const existing = loadAccounts().find(a => a.id === _editingAccountId) || {};
     window._fbSaveAccount(_editingAccountId, {
       id:        _editingAccountId,
       name,
-      type:      existing.type || 'auto',
       color:     _newAcctColor,
       createdAt: existing.createdAt || 0
     });
@@ -2631,14 +2576,12 @@ function saveAccountModal() {
     return;
   }
 
-  // Criar nova
-  const id  = 'acct_' + Date.now();
-  const data = { id, name, type: _newAcctType, color: _newAcctColor, createdAt: Date.now() };
+  const id   = 'acct_' + Date.now();
+  const data = { id, name, color: _newAcctColor, createdAt: Date.now() };
   window._fbSaveAccount(id, data);
   document.getElementById('addAccountModal').style.display = 'none';
   showToast('Conta "' + name + '" criada ✓');
 
-  // Troca para a nova conta assim que o onValue confirmar (aguarda cache atualizar)
   function _waitAndSwitch(attempts) {
     const exists = (window._cachedAccounts || []).find(a => a.id === id);
     if (exists) {
@@ -5184,25 +5127,9 @@ async function deleteTrade(id) {
 
     <div class="form-group">
       <label>Nome da conta</label>
-      <input type="text" id="new-acct-name" placeholder="ex: Conta Real MT5, Demo Bybit..."
+      <input type="text" id="new-acct-name" placeholder="ex: Conta Real, Demo, Prop Firm..."
              maxlength="40" oninput="validateAccountForm()"
              onkeydown="if(event.key==='Enter')saveAccountModal();if(event.key==='Escape')closeAddAccountModal()">
-    </div>
-
-    <div class="form-group">
-      <label>Tipo de conta</label>
-      <div class="acct-modal-type-grid" id="acct-type-grid">
-        <div class="acct-type-card selected" data-type="auto" onclick="selectAccountType('auto')">
-          <div class="acct-type-card-icon">🔄</div>
-          <div class="acct-type-card-label">Importação Automática</div>
-          <div class="acct-type-card-desc">Importa trades do MT5 / CSV. Dados sincronizados com Firebase.</div>
-        </div>
-        <div class="acct-type-card" data-type="manual" onclick="selectAccountType('manual')">
-          <div class="acct-type-card-icon">✏️</div>
-          <div class="acct-type-card-label">Registro Manual</div>
-          <div class="acct-type-card-desc">Registre trades manualmente pelo formulário. Sincronizado via Firebase entre dispositivos.</div>
-        </div>
-      </div>
     </div>
 
     <div class="form-group">
