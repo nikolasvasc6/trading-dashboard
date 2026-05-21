@@ -390,7 +390,74 @@
     background:var(--bg);color:var(--text);
     font-size:13.5px;line-height:1.55;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
+  /* ── Mobile Top Bar ─────────────────────────────────────── */
+  .mobile-topbar{
+    display:none;
+    align-items:center;justify-content:space-between;
+    padding:10px 14px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:40;
+    gap:10px;
+  }
+  .mobile-topbar-left{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+  .mobile-topbar-logo{
+    width:28px;height:28px;flex-shrink:0;
+    background:linear-gradient(135deg,#4a7c59,#2c4f38);
+    border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+  }
+  .mobile-topbar-title{font-size:14px;font-weight:600;letter-spacing:-.2px;color:var(--text);line-height:1.2;}
+  /* Account selector button in mobile topbar */
+  .mobile-acct-btn{
+    display:flex;align-items:center;gap:7px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    padding:6px 10px;
+    cursor:pointer;
+    transition:all var(--t);
+    flex:1;min-width:0;
+    max-width:200px;
+    margin-left:auto;
+  }
+  .mobile-acct-btn:hover, .mobile-acct-btn:active{
+    background:var(--surface-3);
+    border-color:var(--border-strong);
+  }
+  .mobile-acct-btn-name{
+    font-size:12px;font-weight:500;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    flex:1;min-width:0;text-align:left;
+  }
+  .mobile-acct-btn-chevron{
+    font-size:10px;color:var(--faint);flex-shrink:0;
+    transition:transform var(--t);
+  }
+  /* When dropdown is open, rotate chevron on mobile */
+  .mobile-acct-btn.open .mobile-acct-btn-chevron{ transform:rotate(180deg); }
+
+  @media(max-width:560px){
+    .mobile-topbar{display:flex;}
+    .page{padding-top:8px;}
+    /* Override acct-dropdown to be fixed, full-width, below the mobile topbar */
+    .acct-dropdown{
+      position:fixed !important;
+      left:12px !important;
+      right:12px !important;
+      top:60px !important;   /* below the ~49px topbar */
+      width:auto !important;
+      z-index:1000 !important;
+      box-shadow:0 8px 32px rgba(0,0,0,.55) !important;
+      border-radius:var(--rl) !important;
+      max-height:70vh !important;
+      overflow-y:auto !important;
+    }
+  }
+
   /* ── App Shell ──────────────────────────────────────────── */
   .app-shell{
     display:flex;height:100vh;height:100dvh;overflow:hidden;
@@ -506,6 +573,10 @@
     .sidebar{ width:190px; }
     .page{ padding:16px 16px 80px; }
     .main-topbar{ padding:10px 16px; }
+    .kpi-grid{ grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+    .charts-top{ grid-template-columns:1fr; }
+    .charts-bottom{ grid-template-columns:1fr; }
+    .charts-strat{ grid-template-columns:1fr; }
   }
 
   /* ── Mobile: sidebar vira bottom nav bar ─────────────────── */
@@ -527,6 +598,8 @@
     .sidebar-logo{ display:none; }
     .sidebar-bottom{ display:none; }
     .sidebar-section-label{ display:none; }
+    .acct-selector{ display:none; }
+    .sidebar-themes{ display:none; }
 
     /* nav ocupa toda a largura */
     .sidebar-nav{
@@ -587,6 +660,11 @@
   @media(max-width:380px){
     .nav-item{ font-size:8px; }
     .nav-icon{ font-size:18px; }
+    .kpi-grid{ grid-template-columns:1fr 1fr; gap:6px; }
+    .kpi-value{ font-size:18px; }
+    .kpi{ padding:10px 12px; }
+    .page{ padding:10px 10px 72px; }
+    .calc-rr-row{ grid-template-columns:1fr; }
   }
 
   /* ── Buttons ─────────────────────────────────────────────── */
@@ -807,6 +885,10 @@
   }
 
   /* ── List view table ─────────────────────────────────────────── */
+  .bloco-list-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .bloco-list-table {
     width: 100%;
     border-collapse: collapse;
@@ -854,6 +936,7 @@
 
   /* ── Table ──────────────────────────────────────────────── */
   .table-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
+  .table-section-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .table-header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
   .table-header h3{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:500;}
   table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -1035,6 +1118,7 @@
     .calc-market-selector{gap:6px;}
     .calc-mkt-btn{padding:7px 12px;font-size:11.5px;flex:1;text-align:center;}
     .calc-card{padding:16px;}
+    .calc-result-card{position:static;padding:16px;}
   }
 
   /* ── Calculadora: Warning lote mínimo ───────────────────────── */
@@ -1279,7 +1363,9 @@
       padding:12px 16px;margin-left:0;border-top:.5px solid var(--border);
       flex-direction:row;align-items:center;gap:10px;min-width:0;width:100%;box-sizing:border-box;
     }
-    .balance-banner .bb-input-group label{white-space:nowrap;}
+    .balance-banner .bb-input-group label{white-space:nowrap;flex-shrink:0;}
+    .balance-banner .bb-input-group > .bb-display,
+    .balance-banner .bb-input-group > .bb-edit-wrap{flex:1;min-width:0;}
     .bb-display-value{font-size:13px;}
     .balance-banner input.bb-input{flex:1;width:auto;font-size:16px;min-width:0;}
     .kpi-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
@@ -1309,24 +1395,27 @@
     .modal-actions{flex-direction:column;}
     .modal-actions .btn{width:100%;text-align:center;padding:11px;}
     .ms-item{padding:10px 12px;}
-    table,thead,tbody,th,td,tr{display:block;}
-    thead{display:none;}
-    tbody tr{background:var(--surface);border-bottom:.5px solid var(--border);padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"date market" "asset dir" "result result" "strat tf" "notes notes" "actions actions";gap:6px 12px;}
-    tbody tr:last-child{border-bottom:none;}
-    td:nth-child(1){grid-area:date;font-size:12px;color:var(--muted);}
-    td:nth-child(2){grid-area:market;text-align:right;}
-    td:nth-child(3){grid-area:asset;font-weight:600;font-size:14px;align-self:center;}
-    td:nth-child(4){grid-area:dir;text-align:right;align-self:center;}
-    td:nth-child(5){grid-area:result;font-size:16px;font-weight:600;padding:4px 0;}
-    td:nth-child(6){grid-area:strat;font-size:11px;}
-    td:nth-child(7){grid-area:tf;text-align:right;font-size:11px;}
-    td:nth-child(8){grid-area:notes;font-size:12px;color:var(--muted);}
-    td:nth-child(9){grid-area:actions;display:flex;justify-content:flex-end;gap:6px;padding-top:4px;}
-    td{padding:0;border:none;background:transparent !important;}
-    tbody tr:hover td{background:transparent !important;}
+    #tableBody table,#tableBody thead,#tableBody tbody,#tableBody th,#tableBody td,#tableBody tr{display:block;}
+    #tableBody thead{display:none;}
+    #tableBody tbody tr{background:var(--surface);border-bottom:.5px solid var(--border);padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"date market" "asset dir" "result result" "strat tf" "notes notes" "actions actions";gap:6px 12px;}
+    #tableBody tbody tr:last-child{border-bottom:none;}
+    #tableBody td:nth-child(1){grid-area:date;font-size:12px;color:var(--muted);}
+    #tableBody td:nth-child(2){grid-area:market;text-align:right;}
+    #tableBody td:nth-child(3){grid-area:asset;font-weight:600;font-size:14px;align-self:center;}
+    #tableBody td:nth-child(4){grid-area:dir;text-align:right;align-self:center;}
+    #tableBody td:nth-child(5){grid-area:result;font-size:16px;font-weight:600;padding:4px 0;}
+    #tableBody td:nth-child(6){grid-area:strat;font-size:11px;}
+    #tableBody td:nth-child(7){grid-area:tf;text-align:right;font-size:11px;}
+    #tableBody td:nth-child(8){grid-area:notes;font-size:12px;color:var(--muted);}
+    #tableBody td:nth-child(9){grid-area:actions;display:flex;justify-content:flex-end;gap:6px;padding-top:4px;}
+    #tableBody td{padding:0;border:none;background:transparent !important;}
+    #tableBody tbody tr:hover td{background:transparent !important;}
     .action-btn{padding:6px 10px;font-size:14px;}
-    .toast{bottom:130px;right:14px;left:14px;text-align:center;}
-    .ntd-overlay{padding-bottom:56px;}
+    .toast{bottom:72px;right:14px;left:14px;text-align:center;}
+    .ntd-overlay{padding-bottom:58px;}
+    .bloco-cards-topbar{flex-direction:column;align-items:flex-start;gap:8px;}
+    .bloco-view-toggle{width:100%;}
+    .bloco-view-btn{flex:1;justify-content:center;}
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -1683,7 +1772,7 @@
     .bstat-value { font-size: 15px; }
     .bloco-body { padding: 14px 14px; gap:16px; }
     .bloco-cards-grid { grid-template-columns: repeat(7, 1fr); gap: 6px; }
-    .op-card { padding: 7px 8px; gap: 3px; }
+    .op-card { padding: 7px 8px; gap: 3px; height: 90px; }
     .op-card-result { font-size: 11px; }
     .op-card-asset { font-size: 9px; }
     .op-card-pct { display: none; }
@@ -1695,11 +1784,19 @@
     .diario-selector-row { gap: 6px; }
     .bloco-sel-btn { font-size: 11px; padding: 6px 10px; }
     .bloco-equity-wrap { height: 130px; }
+    .bloco-list-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .bloco-list-table { min-width: 480px; }
+    .op-detail-overlay { align-items: flex-end; padding: 0; padding-bottom: 58px; }
+    .op-detail-modal { width: 100vw; max-height: 85vh; overflow-y: auto; border-radius: var(--rl) var(--rl) 0 0; animation: dlgSlideUp .22s ease; }
   }
   @media(max-width:400px){
     .bloco-cards-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+    .op-card { height: 80px; }
     .diario-summary { grid-template-columns: repeat(2, 1fr); }
     .bloco-stats { gap: 8px; }
+  }
+  @media(max-width:320px){
+    .bloco-cards-grid { grid-template-columns: repeat(4, 1fr); }
   }
 </style>
 </head>
@@ -1781,6 +1878,22 @@
 
   <!-- MAIN -->
   <div class="main-content">
+
+    <!-- Mobile top bar (visible only on mobile when sidebar is bottom nav) -->
+    <div class="mobile-topbar" id="mobile-topbar">
+      <div class="mobile-topbar-left">
+        <div class="mobile-topbar-logo">📈</div>
+        <div>
+          <div class="mobile-topbar-title" id="mobile-topbar-title">Diário</div>
+        </div>
+      </div>
+      <button class="mobile-acct-btn" id="mobile-acct-btn" onclick="toggleAccountDropdown(event)">
+        <div class="acct-dot" id="mobile-acct-dot" style="background:#5cb87a; width:8px; height:8px;"></div>
+        <span class="mobile-acct-btn-name" id="mobile-topbar-acct">Conta Principal</span>
+        <span class="mobile-acct-btn-chevron" id="mobile-acct-chevron">▾</span>
+      </button>
+    </div>
+
     <div class="page">
 
   <!-- VIEW: PRINCIPAL -->
@@ -2453,6 +2566,11 @@ function renderAccountSelector() {
 
   if (dotEl)  dotEl.style.background = active.color || '#5cb87a';
   if (nameEl) nameEl.textContent     = active.name;
+  // sync mobile topbar
+  const mobileAcctEl  = document.getElementById('mobile-topbar-acct');
+  const mobileAcctDot = document.getElementById('mobile-acct-dot');
+  if (mobileAcctEl)  mobileAcctEl.textContent      = active.name;
+  if (mobileAcctDot) mobileAcctDot.style.background = active.color || '#5cb87a';
 
   const listEl = document.getElementById('acct-list');
   if (!listEl) return;
@@ -2476,15 +2594,29 @@ function renderAccountSelector() {
 }
 
 /* ── Dropdown toggle ─────────────────────────────────────────── */
+let _acctDdOriginalParent = null; // holds original parent on mobile teleport
+
+function _isMobileNav() {
+  return window.innerWidth <= 560;
+}
+
 function toggleAccountDropdown(e) {
   if (e) e.stopPropagation();
   const dd  = document.getElementById('acct-dropdown');
   const chv = document.getElementById('acct-chevron');
+  const mBtn = document.getElementById('mobile-acct-btn');
   if (dd.style.display !== 'none') {
     closeAccountDropdown();
   } else {
+    // On mobile: teleport the dropdown to <body> so it renders
+    // despite its parent (#acct-selector) being display:none
+    if (_isMobileNav() && dd.parentElement !== document.body) {
+      _acctDdOriginalParent = dd.parentElement;
+      document.body.appendChild(dd);
+    }
     dd.style.display = '';
     if (chv) chv.classList.add('open');
+    if (mBtn) mBtn.classList.add('open');
     renderAccountSelector();
     setTimeout(() => document.addEventListener('click', _acctOutsideClick), 0);
   }
@@ -2493,14 +2625,28 @@ function toggleAccountDropdown(e) {
 function closeAccountDropdown() {
   const dd  = document.getElementById('acct-dropdown');
   const chv = document.getElementById('acct-chevron');
-  if (dd)  dd.style.display = 'none';
+  const mBtn = document.getElementById('mobile-acct-btn');
+  if (dd) {
+    dd.style.display = 'none';
+    // Restore dropdown to its original parent if it was teleported
+    if (_acctDdOriginalParent && dd.parentElement === document.body) {
+      _acctDdOriginalParent.appendChild(dd);
+      _acctDdOriginalParent = null;
+    }
+  }
   if (chv) chv.classList.remove('open');
+  if (mBtn) mBtn.classList.remove('open');
   document.removeEventListener('click', _acctOutsideClick);
 }
 
 function _acctOutsideClick(e) {
-  const sel = document.getElementById('acct-selector');
-  if (sel && !sel.contains(e.target)) closeAccountDropdown();
+  const sel   = document.getElementById('acct-selector');
+  const mBtn  = document.getElementById('mobile-acct-btn');
+  const dd    = document.getElementById('acct-dropdown');
+  const inSel  = sel  && sel.contains(e.target);
+  const inMBtn = mBtn && mBtn.contains(e.target);
+  const inDd   = dd   && dd.contains(e.target);
+  if (!inSel && !inMBtn && !inDd) closeAccountDropdown();
 }
 
 /* ── CRUD — todas as escritas vão para Firebase ─────────────── */
@@ -2793,6 +2939,10 @@ function switchTab(name) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('btn-' + name).classList.add('active');
+  // Update mobile topbar title
+  const tabLabels = {diario:'Diário',operacoes:'Operações',calculadora:'Calculadora',principal:'Overview'};
+  const mtt = document.getElementById('mobile-topbar-title');
+  if (mtt) mtt.textContent = tabLabels[name] || name;
   // scroll main content to top on tab change
   const mc = document.querySelector('.main-content');
   if (mc) mc.scrollTop = 0;
@@ -3448,7 +3598,7 @@ function _renderBlocoDetail(bi) {
     const type   = isWin ? 'take' : 'stop';
     const pct    = capital > 0 ? (t.result / capital * 100) : null;
     const pctStr = pct !== null ? `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%` : '';
-    const cardDate = t.date ? t.date.split('-').reverse().join('/') : '\u2014';
+    const cardDate = t.date ? t.date.split('-').slice(1).reverse().join('/') : '\u2014';
     cardsHtml += `
       <div class="op-card ${type}" title="${t.asset} \u2022 ${t.date}" onclick="openOpDetail('${t.id}')">
         <div class="op-card-asset" style="${!t.asset ? 'color:var(--faint);font-weight:500;font-size:10px;' : ''}">${t.asset || 'sem ativo'}</div>
