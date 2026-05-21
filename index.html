@@ -186,6 +186,186 @@
     letter-spacing: .8px; font-weight: 600; padding: 0 12px 4px;
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     SELETOR DE CONTAS — Multi-account sidebar
+     ══════════════════════════════════════════════════════════════ */
+  .acct-selector {
+    padding: 8px 10px 6px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .acct-active {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px;
+    border-radius: var(--r);
+    cursor: pointer;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    transition: all var(--t);
+    user-select: none;
+  }
+  .acct-active:hover {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+  }
+  .acct-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .acct-info { flex: 1; min-width: 0; }
+  .acct-name {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .acct-type-badge {
+    font-size: 9.5px; color: var(--muted); letter-spacing: .3px;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .acct-chevron {
+    font-size: 10px; color: var(--faint);
+    transition: transform var(--t); flex-shrink: 0;
+  }
+  .acct-chevron.open { transform: rotate(180deg); }
+
+  .acct-dropdown {
+    position: absolute; left: 10px; right: 10px;
+    top: calc(100% + 4px);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--rl);
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    overflow: hidden;
+    animation: acctSlideIn .15s ease;
+  }
+  @keyframes acctSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .acct-dropdown-header {
+    padding: 10px 14px 6px;
+    font-size: 9.5px; font-weight: 600; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--faint);
+    border-bottom: 1px solid var(--border);
+  }
+  .acct-list { padding: 6px; max-height: 240px; overflow-y: auto; }
+  .acct-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px; border-radius: 8px;
+    cursor: pointer; transition: background var(--t);
+    position: relative;
+  }
+  .acct-item:hover { background: var(--surface-2); }
+  .acct-item.active { background: var(--surface-3); }
+  .acct-item-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  }
+  .acct-item-info { flex: 1; min-width: 0; }
+  .acct-item-name {
+    font-size: 12px; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .acct-item-meta {
+    font-size: 10px; color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+    margin-top: 1px;
+  }
+  .acct-item-check {
+    font-size: 11px; color: var(--green); flex-shrink: 0;
+  }
+  .acct-item-actions {
+    display: flex; gap: 4px; flex-shrink: 0; opacity: 0;
+    transition: opacity var(--t);
+  }
+  .acct-item:hover .acct-item-actions { opacity: 1; }
+  .acct-item-btn {
+    width: 22px; height: 22px; border-radius: 5px;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--muted); font-size: 11px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--t);
+  }
+  .acct-item-btn:hover { background: var(--surface-3); color: var(--text); }
+  .acct-item-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+  .acct-add-btn {
+    display: flex; align-items: center; gap: 7px;
+    width: 100%; padding: 9px 16px;
+    border: none; background: none;
+    font-size: 12px; font-weight: 500; color: var(--muted);
+    cursor: pointer; transition: all var(--t);
+    border-top: 1px solid var(--border);
+    text-align: left;
+  }
+  .acct-add-btn:hover { background: var(--surface-2); color: var(--text); }
+  .acct-add-icon {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 1.5px dashed var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--faint);
+    transition: all var(--t);
+  }
+  .acct-add-btn:hover .acct-add-icon {
+    border-color: var(--green); color: var(--green);
+  }
+
+  /* ── Modal de nova conta ─────────────────────────────────── */
+  .acct-modal-type-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-top: 6px;
+  }
+  .acct-type-card {
+    padding: 14px 12px; border-radius: var(--r);
+    border: 1.5px solid var(--border);
+    cursor: pointer; transition: all var(--t);
+    text-align: center;
+  }
+  .acct-type-card:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-2);
+  }
+  .acct-type-card.selected {
+    border-color: var(--green);
+    background: var(--green-bg);
+  }
+  .acct-type-card-icon { font-size: 24px; margin-bottom: 6px; }
+  .acct-type-card-label {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .acct-type-card-desc {
+    font-size: 10.5px; color: var(--muted); line-height: 1.4;
+  }
+  .acct-color-row {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;
+  }
+  .acct-color-swatch {
+    width: 22px; height: 22px; border-radius: 50%;
+    cursor: pointer; border: 2px solid transparent;
+    transition: all .15s;
+  }
+  .acct-color-swatch:hover { transform: scale(1.15); }
+  .acct-color-swatch.selected {
+    border-color: var(--text);
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .acct-rename-wrap {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .acct-rename-wrap input {
+    flex: 1; padding: 7px 10px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text); font-size: 13px;
+  }
+  .acct-rename-wrap input:focus {
+    outline: none; border-color: var(--border-focus);
+  }
+
+  /* badge tipo manual/auto */
+  .badge-auto   { background: var(--blue-bg);   color: var(--blue);   }
+  .badge-manual { background: var(--amber-bg);  color: var(--amber);  }
+
   /* ── Tokens invariantes (espaço, sombra, animação) ─────────── */
   :root {
     --r:  8px;
@@ -1538,6 +1718,29 @@
       </div>
     </div>
 
+    <!-- SELETOR DE CONTAS -->
+    <div class="acct-selector" id="acct-selector">
+      <div class="acct-active" id="acct-active-btn" onclick="toggleAccountDropdown(event)">
+        <div class="acct-dot" id="acct-active-dot" style="background:#5cb87a"></div>
+        <div class="acct-info">
+          <div class="acct-name" id="acct-active-name">Conta Principal</div>
+          <div class="acct-type-badge" id="acct-active-badge">
+            <span id="acct-active-type-icon">🔄</span>
+            <span id="acct-active-type-label">Automática</span>
+          </div>
+        </div>
+        <span class="acct-chevron" id="acct-chevron">▾</span>
+      </div>
+      <div class="acct-dropdown" id="acct-dropdown" style="display:none">
+        <div class="acct-dropdown-header">Contas</div>
+        <div class="acct-list" id="acct-list"></div>
+        <button class="acct-add-btn" onclick="openAddAccountModal(); closeAccountDropdown()">
+          <span class="acct-add-icon">+</span>
+          Adicionar conta
+        </button>
+      </div>
+    </div>
+
     <nav class="sidebar-nav">
       <div class="sidebar-section-label">Menu</div>
       <button class="nav-item active" id="btn-diario" onclick="switchTab('diario')">
@@ -1574,8 +1777,13 @@
         <div class="dot spin" id="status-dot"></div>
         <span id="status-text" style="font-size:11px">Conectando...</span>
       </div>
-      <button class="btn" style="width:100%;font-size:11.5px;padding:7px 10px" onclick="document.getElementById('bybit-file').click()">⬆ Importar</button>
-      <input type="file" id="bybit-file" accept=".csv" style="display:none" onchange="handleBybitCSV(event)">
+      <div id="sidebar-import-wrap">
+        <button class="btn" style="width:100%;font-size:11.5px;padding:7px 10px" onclick="document.getElementById('bybit-file').click()">⬆ Importar CSV</button>
+        <input type="file" id="bybit-file" accept=".csv" style="display:none" onchange="handleBybitCSV(event)">
+      </div>
+      <div id="sidebar-manual-badge" style="display:none;padding:6px 10px;border-radius:var(--r);background:var(--amber-bg);border:1px solid rgba(240,168,48,.18);font-size:10.5px;color:var(--amber);text-align:center">
+        ✏️ Conta manual — sem importação
+      </div>
       <button class="btn btn-primary" style="width:100%;font-size:12px;padding:8px 10px" onclick="toggleForm()">+ Nova operação</button>
     </div>
   </aside>
@@ -2071,37 +2279,61 @@ const firebaseConfig = {
   appId: "1:275778333301:web:bc1cfdd465b5521fb5e63c"
 };
 
-const app     = initializeApp(firebaseConfig);
-const db      = getDatabase(app);
-const tRef    = ref(db, 'trades');
-const sRef    = ref(db, 'settings/initialBalance');
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
 
-window._fbPush       = (data)     => push(tRef, data);
-window._fbRemove     = (id)       => remove(ref(db, 'trades/' + id));
-window._fbUpdate     = (id, data) => update(ref(db, 'trades/' + id), data);
-window._fbSetBalance = (val)      => update(ref(db, 'settings'), { initialBalance: val });
+let _tradesUnsub   = null;
+let _settingsUnsub = null;
 
-onValue(tRef, (snap) => {
-  const raw = snap.val() || {};
-  trades = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
-  setStatus('on', 'Conectado · ' + trades.length + ' operações');
-  if (!window._tabRestored) { window._tabRestored=true; restoreTab(); }
-  buildMonthChips();
-  renderAll();
-}, (err) => {
-  setStatus('', 'Erro de conexão');
-  console.error(err);
-});
+function _tradesPath(id)   { return id === 'default' ? 'trades'                            : `accounts/${id}/trades`; }
+function _settingsPath(id) { return id === 'default' ? 'settings/initialBalance'           : `accounts/${id}/settings/initialBalance`; }
+function _settingsNode(id) { return id === 'default' ? 'settings'                          : `accounts/${id}/settings`; }
 
-onValue(sRef, (snap) => {
-  const val = snap.val();
-  if (val !== null) {
-    initialBalance = parseFloat(val) || 0;
-    const input = document.getElementById('initial-balance-input');
-    if (input && document.activeElement !== input) input.value = initialBalance || '';
-    renderKPIs();
-  }
-});
+function subscribeToAccount(accountId) {
+  // Unsubscribe previous listeners
+  if (_tradesUnsub)   { try { _tradesUnsub();   } catch(e){} _tradesUnsub   = null; }
+  if (_settingsUnsub) { try { _settingsUnsub(); } catch(e){} _settingsUnsub = null; }
+
+  const tPath = _tradesPath(accountId);
+  const tRef  = ref(db, tPath);
+
+  // Wire up write functions for this account
+  window._fbPush       = (data) => push(tRef, data);
+  window._fbRemove     = (id)   => remove(ref(db, tPath + '/' + id));
+  window._fbUpdate     = (id, data) => update(ref(db, tPath + '/' + id), data);
+  window._fbSetBalance = (val)  => update(ref(db, _settingsNode(accountId)), { initialBalance: val });
+
+  _tradesUnsub = onValue(tRef, (snap) => {
+    const raw = snap.val() || {};
+    trades = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
+    setStatus('on', 'Conectado · ' + trades.length + ' operações');
+    if (!window._tabRestored) { window._tabRestored = true; restoreTab(); }
+    buildMonthChips();
+    renderAll();
+  }, (err) => {
+    setStatus('', 'Erro de conexão');
+    console.error(err);
+  });
+
+  _settingsUnsub = onValue(ref(db, _settingsPath(accountId)), (snap) => {
+    const val = snap.val();
+    if (val !== null) {
+      initialBalance = parseFloat(val) || 0;
+      const input = document.getElementById('initial-balance-input');
+      if (input && document.activeElement !== input) input.value = initialBalance || '';
+      renderKPIs();
+    } else {
+      initialBalance = 0;
+      const input = document.getElementById('initial-balance-input');
+      if (input && document.activeElement !== input) input.value = '';
+      renderKPIs();
+    }
+  });
+}
+
+window._subscribeToAccount = subscribeToAccount;
+
+// Initial subscription is triggered by the account system after DOM is ready
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -2109,6 +2341,387 @@ onValue(sRef, (snap) => {
 let trades         = [];
 let charts         = {};
 let initialBalance = 0;
+
+/* ══════════════════════════════════════════════════════════════
+   SISTEMA MULTI-CONTA
+   ══════════════════════════════════════════════════════════════ */
+const ACCT_COLORS = ['#5cb87a','#6fa8d4','#d4963a','#9e97d8','#e07070','#4ab89a','#f0a830','#b39dff'];
+const ACCT_STORAGE_KEY   = 'td_accounts_v2';
+const ACCT_ACTIVE_KEY    = 'td_active_account';
+
+function _defaultAccounts() {
+  return [{ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a' }];
+}
+
+function loadAccounts() {
+  try {
+    const raw = localStorage.getItem(ACCT_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch(e) {}
+  return _defaultAccounts();
+}
+
+function saveAccounts(accounts) {
+  try { localStorage.setItem(ACCT_STORAGE_KEY, JSON.stringify(accounts)); } catch(e) {}
+}
+
+function getActiveAccountId() {
+  try { return localStorage.getItem(ACCT_ACTIVE_KEY) || 'default'; } catch(e) { return 'default'; }
+}
+
+function getActiveAccount() {
+  const accounts = loadAccounts();
+  const id = getActiveAccountId();
+  return accounts.find(a => a.id === id) || accounts[0];
+}
+
+/* ── Troca de conta ─────────────────────────────────────────── */
+function switchAccount(id) {
+  const accounts = loadAccounts();
+  const account  = accounts.find(a => a.id === id);
+  if (!account) return;
+
+  try { localStorage.setItem(ACCT_ACTIVE_KEY, id); } catch(e) {}
+
+  // Reset global state
+  trades         = [];
+  initialBalance = 0;
+  window._tabRestored = false;
+
+  // Reset UI
+  setStatus('', 'Trocando conta...');
+
+  if (account.type === 'auto') {
+    // Firebase mode
+    _setImportVisible(true);
+    if (window._subscribeToAccount) {
+      window._subscribeToAccount(id);
+    }
+  } else {
+    // Manual mode — localStorage only
+    _setImportVisible(false);
+    _loadManualAccount(id);
+  }
+
+  closeAccountDropdown();
+  renderAccountSelector();
+}
+
+/* ── Conta manual — localStorage ───────────────────────────── */
+function _manualKey(id)  { return 'td_trades_manual_' + id; }
+function _manualBal(id)  { return 'td_balance_manual_' + id; }
+
+function _loadManualAccount(id) {
+  try {
+    const raw = localStorage.getItem(_manualKey(id));
+    trades = raw ? JSON.parse(raw) : [];
+  } catch(e) { trades = []; }
+  try {
+    initialBalance = parseFloat(localStorage.getItem(_manualBal(id)) || '0') || 0;
+  } catch(e) { initialBalance = 0; }
+
+  // Wire write functions to localStorage
+  window._fbPush = (data) => {
+    const newTrade = {
+      id: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+      ...data
+    };
+    trades.push(newTrade);
+    _saveManualTrades(id);
+    setStatus('on', 'Manual · ' + trades.length + ' operações');
+    buildMonthChips();
+    renderAll();
+    return Promise.resolve({ key: newTrade.id });
+  };
+  window._fbRemove = (tradeId) => {
+    trades = trades.filter(t => t.id !== tradeId);
+    _saveManualTrades(id);
+    renderAll();
+    return Promise.resolve();
+  };
+  window._fbUpdate = (tradeId, data) => {
+    trades = trades.map(t => t.id === tradeId ? { ...t, ...data } : t);
+    _saveManualTrades(id);
+    renderAll();
+    return Promise.resolve();
+  };
+  window._fbSetBalance = (val) => {
+    initialBalance = val;
+    try { localStorage.setItem(_manualBal(id), String(val)); } catch(e) {}
+    renderKPIs();
+    return Promise.resolve();
+  };
+
+  setStatus('on', 'Manual · ' + trades.length + ' operações');
+  if (!window._tabRestored) { window._tabRestored = true; restoreTab(); }
+  buildMonthChips();
+  renderAll();
+
+  // Sync balance input
+  const input = document.getElementById('initial-balance-input');
+  if (input) input.value = initialBalance || '';
+}
+
+function _saveManualTrades(id) {
+  try { localStorage.setItem(_manualKey(id), JSON.stringify(trades)); } catch(e) {}
+}
+
+/* ── Visibilidade do botão Importar ────────────────────────── */
+function _setImportVisible(visible) {
+  const wrap   = document.getElementById('sidebar-import-wrap');
+  const manual = document.getElementById('sidebar-manual-badge');
+  const fabImp = document.querySelector('.mobile-fab-import');
+  if (wrap)   wrap.style.display   = visible ? '' : 'none';
+  if (manual) manual.style.display = visible ? 'none' : '';
+  if (fabImp) fabImp.style.display = visible ? '' : 'none';
+}
+
+/* ── Render sidebar account selector ──────────────────────── */
+function renderAccountSelector() {
+  const accounts = loadAccounts();
+  const activeId = getActiveAccountId();
+  const active   = accounts.find(a => a.id === activeId) || accounts[0];
+
+  // Header pill
+  const dotEl   = document.getElementById('acct-active-dot');
+  const nameEl  = document.getElementById('acct-active-name');
+  const typeIcon = document.getElementById('acct-active-type-icon');
+  const typeLbl  = document.getElementById('acct-active-type-label');
+
+  if (dotEl)   dotEl.style.background   = active.color || '#5cb87a';
+  if (nameEl)  nameEl.textContent        = active.name;
+  if (typeIcon) typeIcon.textContent     = active.type === 'auto' ? '🔄' : '✏️';
+  if (typeLbl)  typeLbl.textContent      = active.type === 'auto' ? 'Automática' : 'Manual';
+
+  // Dropdown list
+  const listEl = document.getElementById('acct-list');
+  if (!listEl) return;
+
+  listEl.innerHTML = accounts.map(a => {
+    const isActive = a.id === activeId;
+    const typeBadge = a.type === 'auto'
+      ? `<span class="badge badge-auto">Auto</span>`
+      : `<span class="badge badge-manual">Manual</span>`;
+    const canDelete = a.id !== 'default';
+    return `
+    <div class="acct-item${isActive ? ' active' : ''}" onclick="switchAccount('${a.id}')">
+      <div class="acct-item-dot" style="background:${a.color || '#5cb87a'}"></div>
+      <div class="acct-item-info">
+        <div class="acct-item-name">${a.name}</div>
+        <div class="acct-item-meta">${typeBadge}</div>
+      </div>
+      ${isActive ? '<span class="acct-item-check">✓</span>' : ''}
+      <div class="acct-item-actions" onclick="event.stopPropagation()">
+        <button class="acct-item-btn" title="Renomear" onclick="renameAccount('${a.id}')">✏</button>
+        ${canDelete ? `<button class="acct-item-btn del" title="Excluir" onclick="deleteAccount('${a.id}')">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Dropdown toggle ─────────────────────────────────────── */
+function toggleAccountDropdown(e) {
+  if (e) e.stopPropagation();
+  const dd  = document.getElementById('acct-dropdown');
+  const chv = document.getElementById('acct-chevron');
+  const isOpen = dd.style.display !== 'none';
+  if (isOpen) {
+    closeAccountDropdown();
+  } else {
+    dd.style.display = '';
+    if (chv) chv.classList.add('open');
+    renderAccountSelector();
+    // Click outside to close
+    setTimeout(() => document.addEventListener('click', _acctOutsideClick), 0);
+  }
+}
+
+function closeAccountDropdown() {
+  const dd  = document.getElementById('acct-dropdown');
+  const chv = document.getElementById('acct-chevron');
+  if (dd)  dd.style.display = 'none';
+  if (chv) chv.classList.remove('open');
+  document.removeEventListener('click', _acctOutsideClick);
+}
+
+function _acctOutsideClick(e) {
+  const sel = document.getElementById('acct-selector');
+  if (sel && !sel.contains(e.target)) closeAccountDropdown();
+}
+
+/* ── CRUD ─────────────────────────────────────────────────── */
+let _editingAccountId = null;
+let _newAcctType      = 'auto';
+let _newAcctColor     = ACCT_COLORS[0];
+
+function openAddAccountModal(editId) {
+  _editingAccountId = editId || null;
+  _newAcctType      = 'auto';
+  _newAcctColor     = ACCT_COLORS[0];
+
+  const modal    = document.getElementById('addAccountModal');
+  const titleEl  = document.getElementById('acct-modal-title');
+  const nameEl   = document.getElementById('new-acct-name');
+  const createBtn = document.getElementById('acct-create-btn');
+  const typeGrid  = document.getElementById('acct-type-grid');
+
+  if (editId) {
+    const acct = loadAccounts().find(a => a.id === editId);
+    titleEl.textContent   = 'Editar Conta';
+    nameEl.value          = acct ? acct.name : '';
+    _newAcctType          = acct ? acct.type : 'auto';
+    _newAcctColor         = acct ? (acct.color || ACCT_COLORS[0]) : ACCT_COLORS[0];
+    createBtn.textContent = 'Salvar';
+    // Lock type for existing accounts
+    if (typeGrid) typeGrid.querySelectorAll('.acct-type-card').forEach(c => {
+      c.style.pointerEvents = 'none'; c.style.opacity = '.55';
+    });
+  } else {
+    titleEl.textContent   = 'Nova Conta';
+    nameEl.value          = '';
+    createBtn.textContent = 'Criar conta';
+    if (typeGrid) typeGrid.querySelectorAll('.acct-type-card').forEach(c => {
+      c.style.pointerEvents = ''; c.style.opacity = '';
+    });
+  }
+
+  _renderAcctTypeCards();
+  _renderAcctColorPicker();
+  validateAccountForm();
+  modal.style.display = 'flex';
+  setTimeout(() => nameEl.focus(), 80);
+}
+
+function closeAddAccountModal(e) {
+  if (e && e.target !== document.getElementById('addAccountModal')) return;
+  document.getElementById('addAccountModal').style.display = 'none';
+}
+
+function selectAccountType(type) {
+  _newAcctType = type;
+  _renderAcctTypeCards();
+  validateAccountForm();
+}
+
+function _renderAcctTypeCards() {
+  document.querySelectorAll('#acct-type-grid .acct-type-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.type === _newAcctType);
+  });
+}
+
+function _renderAcctColorPicker() {
+  const row = document.getElementById('acct-color-row');
+  if (!row) return;
+  row.innerHTML = ACCT_COLORS.map(c =>
+    `<div class="acct-color-swatch${c === _newAcctColor ? ' selected' : ''}"
+          style="background:${c}"
+          onclick="_pickAcctColor('${c}')" title="${c}"></div>`
+  ).join('');
+}
+
+function _pickAcctColor(c) {
+  _newAcctColor = c;
+  _renderAcctColorPicker();
+}
+
+function validateAccountForm() {
+  const nameVal = (document.getElementById('new-acct-name')?.value || '').trim();
+  const btn = document.getElementById('acct-create-btn');
+  if (btn) btn.disabled = nameVal.length < 1;
+}
+
+function saveAccountModal() {
+  const name = (document.getElementById('new-acct-name')?.value || '').trim();
+  if (!name) return;
+
+  const accounts = loadAccounts();
+
+  if (_editingAccountId) {
+    // Edit existing
+    const idx = accounts.findIndex(a => a.id === _editingAccountId);
+    if (idx !== -1) {
+      accounts[idx].name  = name;
+      accounts[idx].color = _newAcctColor;
+    }
+    saveAccounts(accounts);
+    renderAccountSelector();
+    document.getElementById('addAccountModal').style.display = 'none';
+    showToast('Conta atualizada ✓');
+    return;
+  }
+
+  // Create new
+  const id = 'acct_' + Date.now();
+  accounts.push({ id, name, type: _newAcctType, color: _newAcctColor });
+  saveAccounts(accounts);
+  document.getElementById('addAccountModal').style.display = 'none';
+  showToast('Conta "' + name + '" criada ✓');
+  switchAccount(id);
+}
+
+function renameAccount(id) {
+  closeAccountDropdown();
+  openAddAccountModal(id);
+}
+
+function deleteAccount(id) {
+  if (id === 'default') return;
+  const accounts = loadAccounts();
+  const acct = accounts.find(a => a.id === id);
+  if (!acct) return;
+
+  if (!confirm(`Excluir a conta "${acct.name}"?\n\nTodos os dados manuais serão apagados permanentemente.`)) return;
+
+  const newAccounts = accounts.filter(a => a.id !== id);
+  saveAccounts(newAccounts);
+
+  // Remove manual data if any
+  try { localStorage.removeItem(_manualKey(id)); } catch(e) {}
+  try { localStorage.removeItem(_manualBal(id));  } catch(e) {}
+
+  // If was active, switch to default
+  if (getActiveAccountId() === id) {
+    switchAccount('default');
+  } else {
+    renderAccountSelector();
+  }
+  showToast('Conta excluída');
+}
+
+/* ── Init: run on page load ──────────────────────────────── */
+(function initAccountSystem() {
+  // Ensure default account always exists in storage
+  const accounts = loadAccounts();
+  const hasDefault = accounts.some(a => a.id === 'default');
+  if (!hasDefault) {
+    accounts.unshift({ id: 'default', name: 'Conta Principal', type: 'auto', color: '#5cb87a' });
+    saveAccounts(accounts);
+  }
+
+  const activeId = getActiveAccountId();
+  const active   = accounts.find(a => a.id === activeId) || accounts[0];
+
+  renderAccountSelector();
+  _setImportVisible(active.type === 'auto');
+
+  if (active.type === 'auto') {
+    // Firebase subscription will be triggered by _subscribeToAccount when module loads
+    // Use a small delay to let the ES module register _subscribeToAccount first
+    function _trySubscribe(attempts) {
+      if (window._subscribeToAccount) {
+        window._subscribeToAccount(active.id);
+      } else if (attempts < 30) {
+        setTimeout(() => _trySubscribe(attempts + 1), 100);
+      }
+    }
+    _trySubscribe(0);
+  } else {
+    _loadManualAccount(active.id);
+  }
+})();
 
 /* ══════════════════════════════════════════════════════════════
    SINGLE SOURCE OF TRUTH — Global Filters
@@ -4587,6 +5200,48 @@ async function deleteTrade(id) {
   </div>
   </div><!-- /ntd-modal -->
 </div><!-- /ntd-overlay -->
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Adicionar / editar conta
+════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="addAccountModal" style="display:none" onclick="closeAddAccountModal(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+    <div class="modal-title" id="acct-modal-title">Nova Conta</div>
+
+    <div class="form-group">
+      <label>Nome da conta</label>
+      <input type="text" id="new-acct-name" placeholder="ex: Conta Real MT5, Demo Bybit..."
+             maxlength="40" oninput="validateAccountForm()"
+             onkeydown="if(event.key==='Enter')saveAccountModal();if(event.key==='Escape')closeAddAccountModal()">
+    </div>
+
+    <div class="form-group">
+      <label>Tipo de conta</label>
+      <div class="acct-modal-type-grid" id="acct-type-grid">
+        <div class="acct-type-card selected" data-type="auto" onclick="selectAccountType('auto')">
+          <div class="acct-type-card-icon">🔄</div>
+          <div class="acct-type-card-label">Importação Automática</div>
+          <div class="acct-type-card-desc">Importa trades do MT5 / CSV. Dados sincronizados com Firebase.</div>
+        </div>
+        <div class="acct-type-card" data-type="manual" onclick="selectAccountType('manual')">
+          <div class="acct-type-card-icon">✏️</div>
+          <div class="acct-type-card-label">Registro Manual</div>
+          <div class="acct-type-card-desc">Registre trades manualmente. Dados salvos localmente no dispositivo.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Cor de identificação</label>
+      <div class="acct-color-row" id="acct-color-row"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="acct-create-btn" onclick="saveAccountModal()" disabled>Criar conta</button>
+      <button class="btn" onclick="closeAddAccountModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
