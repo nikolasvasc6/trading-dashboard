@@ -1781,8 +1781,8 @@
         <button class="btn" style="width:100%;font-size:11.5px;padding:7px 10px" onclick="document.getElementById('bybit-file').click()">⬆ Importar CSV</button>
         <input type="file" id="bybit-file" accept=".csv" style="display:none" onchange="handleBybitCSV(event)">
       </div>
-      <div id="sidebar-manual-badge" style="display:none;padding:6px 10px;border-radius:var(--r);background:var(--amber-bg);border:1px solid rgba(240,168,48,.18);font-size:10.5px;color:var(--amber);text-align:center">
-        ✏️ Conta manual — sem importação
+      <div id="sidebar-manual-badge" style="display:none;padding:6px 10px;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--border);font-size:10.5px;color:var(--muted);text-align:center">
+        ✏️ Registro manual · sincronizado
       </div>
       <button class="btn btn-primary" style="width:100%;font-size:12px;padding:8px 10px" onclick="toggleForm()">+ Nova operação</button>
     </div>
@@ -2391,82 +2391,17 @@ function switchAccount(id) {
   initialBalance = 0;
   window._tabRestored = false;
 
-  // Reset UI
   setStatus('', 'Trocando conta...');
 
-  if (account.type === 'auto') {
-    // Firebase mode
-    _setImportVisible(true);
-    if (window._subscribeToAccount) {
-      window._subscribeToAccount(id);
-    }
-  } else {
-    // Manual mode — localStorage only
-    _setImportVisible(false);
-    _loadManualAccount(id);
+  // Ambos os tipos usam Firebase — a diferença é só UI (importar CSV visível ou não)
+  _setImportVisible(account.type === 'auto');
+
+  if (window._subscribeToAccount) {
+    window._subscribeToAccount(id);
   }
 
   closeAccountDropdown();
   renderAccountSelector();
-}
-
-/* ── Conta manual — localStorage ───────────────────────────── */
-function _manualKey(id)  { return 'td_trades_manual_' + id; }
-function _manualBal(id)  { return 'td_balance_manual_' + id; }
-
-function _loadManualAccount(id) {
-  try {
-    const raw = localStorage.getItem(_manualKey(id));
-    trades = raw ? JSON.parse(raw) : [];
-  } catch(e) { trades = []; }
-  try {
-    initialBalance = parseFloat(localStorage.getItem(_manualBal(id)) || '0') || 0;
-  } catch(e) { initialBalance = 0; }
-
-  // Wire write functions to localStorage
-  window._fbPush = (data) => {
-    const newTrade = {
-      id: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
-      ...data
-    };
-    trades.push(newTrade);
-    _saveManualTrades(id);
-    setStatus('on', 'Manual · ' + trades.length + ' operações');
-    buildMonthChips();
-    renderAll();
-    return Promise.resolve({ key: newTrade.id });
-  };
-  window._fbRemove = (tradeId) => {
-    trades = trades.filter(t => t.id !== tradeId);
-    _saveManualTrades(id);
-    renderAll();
-    return Promise.resolve();
-  };
-  window._fbUpdate = (tradeId, data) => {
-    trades = trades.map(t => t.id === tradeId ? { ...t, ...data } : t);
-    _saveManualTrades(id);
-    renderAll();
-    return Promise.resolve();
-  };
-  window._fbSetBalance = (val) => {
-    initialBalance = val;
-    try { localStorage.setItem(_manualBal(id), String(val)); } catch(e) {}
-    renderKPIs();
-    return Promise.resolve();
-  };
-
-  setStatus('on', 'Manual · ' + trades.length + ' operações');
-  if (!window._tabRestored) { window._tabRestored = true; restoreTab(); }
-  buildMonthChips();
-  renderAll();
-
-  // Sync balance input
-  const input = document.getElementById('initial-balance-input');
-  if (input) input.value = initialBalance || '';
-}
-
-function _saveManualTrades(id) {
-  try { localStorage.setItem(_manualKey(id), JSON.stringify(trades)); } catch(e) {}
 }
 
 /* ── Visibilidade do botão Importar ────────────────────────── */
@@ -2693,7 +2628,6 @@ function deleteAccount(id) {
 
 /* ── Init: run on page load ──────────────────────────────── */
 (function initAccountSystem() {
-  // Ensure default account always exists in storage
   const accounts = loadAccounts();
   const hasDefault = accounts.some(a => a.id === 'default');
   if (!hasDefault) {
@@ -2707,20 +2641,15 @@ function deleteAccount(id) {
   renderAccountSelector();
   _setImportVisible(active.type === 'auto');
 
-  if (active.type === 'auto') {
-    // Firebase subscription will be triggered by _subscribeToAccount when module loads
-    // Use a small delay to let the ES module register _subscribeToAccount first
-    function _trySubscribe(attempts) {
-      if (window._subscribeToAccount) {
-        window._subscribeToAccount(active.id);
-      } else if (attempts < 30) {
-        setTimeout(() => _trySubscribe(attempts + 1), 100);
-      }
+  // Ambos os tipos usam Firebase — aguarda o módulo ES registrar _subscribeToAccount
+  function _trySubscribe(attempts) {
+    if (window._subscribeToAccount) {
+      window._subscribeToAccount(active.id);
+    } else if (attempts < 30) {
+      setTimeout(() => _trySubscribe(attempts + 1), 100);
     }
-    _trySubscribe(0);
-  } else {
-    _loadManualAccount(active.id);
   }
+  _trySubscribe(0);
 })();
 
 /* ══════════════════════════════════════════════════════════════
@@ -5226,7 +5155,7 @@ async function deleteTrade(id) {
         <div class="acct-type-card" data-type="manual" onclick="selectAccountType('manual')">
           <div class="acct-type-card-icon">✏️</div>
           <div class="acct-type-card-label">Registro Manual</div>
-          <div class="acct-type-card-desc">Registre trades manualmente. Dados salvos localmente no dispositivo.</div>
+          <div class="acct-type-card-desc">Registre trades manualmente pelo formulário. Sincronizado via Firebase entre dispositivos.</div>
         </div>
       </div>
     </div>
